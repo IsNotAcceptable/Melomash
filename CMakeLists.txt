@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(Melomash)  # Изменено название проекта
+project(Melomash LANGUAGES CXX)  # Изменено название проекта
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

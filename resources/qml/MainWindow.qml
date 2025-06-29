@@ -2,14 +2,14 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 import QtQuick.Layouts 1.15
-import MusicService 1.0
+import Melomash.Services 1.0
 
 ApplicationWindow {
     id: root
     width: 375
     height: 812
     visible: true
-    title: "Music Player"
+    title: "Melomash"
     Material.theme: Material.Dark
     Material.accent: "#FF375F"
 
@@ -63,7 +63,7 @@ ApplicationWindow {
 
                         Item { Layout.fillWidth: true }
 
-                        IOSButton {
+                        MelomashButton {
                             text: {
                                 if (root.currentService === "spotify") return "Spotify"
                                 else return "Яндекс.Музыка"
@@ -112,7 +112,7 @@ ApplicationWindow {
                 }
 
                 // Tab bar (iOS style)
-                IOSTabBar {
+                TabBar {
                     id: tabBar
                     Layout.fillWidth: true
                     currentIndex: swipeView.currentIndex
