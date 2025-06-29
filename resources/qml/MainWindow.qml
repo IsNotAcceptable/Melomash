@@ -2,13 +2,14 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 import QtQuick.Layouts 1.15
+import MusicService 1.0
 
 ApplicationWindow {
     id: root
     width: 375
     height: 812
     visible: true
-    title: "Music Service"
+    title: "Music Player"
     Material.theme: Material.Dark
     Material.accent: "#FF375F"
 
@@ -18,8 +19,16 @@ ApplicationWindow {
     property color textColor: "#FFFFFF"
     property color secondaryTextColor: "#B3B3B3"
 
-    // Состояние текущего сервиса
-    property string currentService: "spotify" // "apple", "youtube"
+    property string currentService: "spotify"
+
+    // Сервисы
+    SpotifyService {
+        id: spotifyService
+    }
+    
+    YandexMusicService {
+        id: yandexMusicService
+    }
 
     StackView {
         id: stackView
@@ -54,28 +63,28 @@ ApplicationWindow {
 
                         Item { Layout.fillWidth: true }
 
-                        Button {
+                        IOSButton {
                             text: {
                                 if (root.currentService === "spotify") return "Spotify"
-                                else if (root.currentService === "apple") return "Apple Music"
-                                else return "YouTube Music"
+                                else return "Яндекс.Музыка"
                             }
-                            flat: true
                             onClicked: serviceMenu.open()
                             
                             Menu {
                                 id: serviceMenu
                                 MenuItem {
                                     text: "Spotify"
-                                    onTriggered: root.currentService = "spotify"
+                                    onTriggered: {
+                                        root.currentService = "spotify";
+                                        spotifyService.authenticate();
+                                    }
                                 }
                                 MenuItem {
-                                    text: "Apple Music"
-                                    onTriggered: root.currentService = "apple"
-                                }
-                                MenuItem {
-                                    text: "YouTube Music"
-                                    onTriggered: root.currentService = "youtube"
+                                    text: "Яндекс.Музыка"
+                                    onTriggered: {
+                                        root.currentService = "yandex";
+                                        yandexMusicService.authenticate();
+                                    }
                                 }
                             }
                         }
@@ -103,28 +112,10 @@ ApplicationWindow {
                 }
 
                 // Tab bar (iOS style)
-                TabBar {
+                IOSTabBar {
                     id: tabBar
                     Layout.fillWidth: true
-                    height: 60
                     currentIndex: swipeView.currentIndex
-                    position: TabBar.Footer
-                    background: Rectangle {
-                        color: root.cardColor
-                    }
-
-                    TabButton {
-                        icon.source: "qrc:/icons/library.png"
-                        icon.color: tabBar.currentIndex === 0 ? root.Material.accent : root.secondaryTextColor
-                    }
-                    TabButton {
-                        icon.source: "qrc:/icons/search.png"
-                        icon.color: tabBar.currentIndex === 1 ? root.Material.accent : root.secondaryTextColor
-                    }
-                    TabButton {
-                        icon.source: "qrc:/icons/player.png"
-                        icon.color: tabBar.currentIndex === 2 ? root.Material.accent : root.secondaryTextColor
-                    }
                 }
             }
         }
