@@ -1,20 +1,13 @@
 #pragma once
-
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QJsonObject>
 
-class MusicService : public QObject {
+class MelomashService : public QObject {
     Q_OBJECT
 public:
-    enum ServiceType {
-        Spotify,
-        YandexMusic
-    };
-    Q_ENUM(ServiceType)
-
-    explicit MusicService(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~MusicService() = default;
+    explicit MelomashService(QObject *parent = nullptr) : QObject(parent) {}
+    virtual ~MelomashService() = default;
 
     virtual void authenticate() = 0;
     virtual void search(const QString &query) = 0;
