@@ -1,26 +1,35 @@
 #pragma once
-#include <QObject>
-#include <QNetworkAccessManager>
-#include <QJsonObject>
 
-class MelomashService : public QObject {
+#include "MusicService.h"
+#include <QtCore>
+#include <QtNetwork>
+#include <QtOAuth2>
+
+class SpotifyService : public MusicService {
     Q_OBJECT
+    Q_PROPERTY(bool authenticated READ isAuthenticated NOTIFY authenticationChanged)
 public:
-    explicit MelomashService(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~MelomashService() = default;
+    explicit SpotifyService(QObject *parent = nullptr);
+    
+    bool isAuthenticated() const { return !m_accessToken.isEmpty(); }
+    
+    void authenticate() override;
+    void search(const QString &query) override;
+    void getLibrary() override;
+    void playTrack(const QString &trackId) override;
 
-    virtual void authenticate() = 0;
-    virtual void search(const QString &query) = 0;
-    virtual void getLibrary() = 0;
-    virtual void playTrack(const QString &trackId) = 0;
+private:
+    QString m_accessToken;
+    QString m_refreshToken;
+    QOAuth2AuthorizationCodeFlow *m_oauth2 = nullptr;
+    
+    void setupOAuth();
+    void refreshAccessToken();
+    void parseSearchResults(const QJsonObject &json);
+    void parseTrack(const QJsonObject &json);
 
 signals:
-    void authenticationComplete(bool success);
-    void searchResultsReceived(const QJsonArray &results);
-    void libraryReceived(const QJsonArray &items);
-    void trackChanged(const QJsonObject &track);
-    void errorOccurred(const QString &message);
-
-protected:
-    QNetworkAccessManager m_networkManager;
+    void authenticationChanged(bool authenticated);
 };
+
+Q_DECLARE_METATYPE(SpotifyService*)

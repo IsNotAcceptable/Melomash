@@ -1,41 +1,32 @@
 cmake_minimum_required(VERSION 3.16)
 project(Melomash LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Явно указываем путь к Qt6
+set(Qt6_DIR "/usr/lib/cmake/Qt6")
+find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 Network Multimedia)
 
-# Включите AUTOMOC явно
-set(CMAKE_AUTOMOC ON)
-
-find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Network Multimedia)
-
-qt_add_executable(Melomash
+# Стандартный add_executable вместо qt_add_executable
+add_executable(Melomash
     src/main.cpp
     src/services/SpotifyService.cpp
     src/services/YandexMusicService.cpp
 )
 
-# Обновленный qt_add_qml_module с явным указанием ресурсов
-qt_add_qml_module(Melomash
-    URI Melomash
-    VERSION 1.0
-    RESOURCE_PREFIX "/melomash"
-    QML_FILES
-        resources/qml/MainWindow.qml
-        resources/qml/components/MelomashButton.qml
-        resources/qml/components/TabBar.qml
-        resources/qml/components/TrackItem.qml
-        resources/qml/views/LibraryView.qml
-        resources/qml/views/PlayerView.qml
-        resources/qml/views/SearchView.qml
-    SOURCES
-        src/services/SpotifyService.h
-        src/services/YandexMusicService.h
-)
-
+# Подключаем модули Qt
 target_link_libraries(Melomash PRIVATE
+    Qt6::Core
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Network
     Qt6::Multimedia
+)
+
+# Для QML модулей используем qt_standard_project_setup()
+qt_standard_project_setup()
+
+# Вручную добавляем QML файлы
+file(GLOB QML_FILES "resources/qml/*.qml")
+qt_add_resources(Melomash "qml"
+    PREFIX "/Melomash"
+    FILES ${QML_FILES}
 )

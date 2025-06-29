@@ -1,14 +1,14 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include "services/SpotifyService.h"
 #include "services/YandexMusicService.h"
 
 int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
     app.setApplicationName("Melomash");
-    app.setApplicationDisplayName("Melomash");
     app.setOrganizationName("Melomash");
-    app.setOrganizationDomain("melomash.app");
+    app.setApplicationVersion("1.0.0");
 
     qmlRegisterType<SpotifyService>("Melomash.Services", 1, 0, "SpotifyService");
     qmlRegisterType<YandexMusicService>("Melomash.Services", 1, 0, "YandexMusicService");
