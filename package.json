@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "easyvk-audio": "github:IsNotAcceptable/EasyVK-AudioAPI"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^39.2.7"
+  }
+}

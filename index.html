@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Melomash Player</title>
+        <style>
+            body {
+                background: #121212;
+                color: #e0e0e0;
+                font-family: "Segoe UI", sans-serif;
+                margin: 20px;
+            }
+            #login-form {
+                background: #1e1e1e;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+            input {
+                padding: 10px;
+                width: 300px;
+                border-radius: 4px;
+                border: 1px solid #444;
+                background: #222;
+                color: white;
+            }
+            button {
+                padding: 10px 20px;
+                border-radius: 4px;
+                background: #0077ff;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #005fcc;
+            }
+            .song-item:hover {
+                color: #0077ff;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Melomash</h1>
+
+        <div id="login-form">
+            <h3>Вход через VK</h3>
+            <input
+                type="text"
+                id="username"
+                placeholder="Телефон или Email"
+            /><br /><br />
+            <input
+                type="password"
+                id="password"
+                placeholder="Пароль"
+            /><br /><br />
+
+            <div id="2fa-area" style="display: none">
+                <input
+                    type="text"
+                    id="otp-code"
+                    placeholder="Код подтверждения"
+                />
+            </div>
+
+            <button id="login-btn" onclick="authAndLoad()">Войти</button>
+        </div>
+
+        <div id="status">Ожидание входа...</div>
+        <hr style="border: 0.5px solid #333; margin: 20px 0" />
+        <div id="playlist"></div>
+
+        <script src="renderer.js"></script>
+    </body>
+</html>
