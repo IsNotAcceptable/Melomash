@@ -1,75 +1,92 @@
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <!doctype html>
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Melomash Player</title>
+        <title>Melomash</title>
         <style>
             body {
                 background: #121212;
-                color: #e0e0e0;
-                font-family: "Segoe UI", sans-serif;
-                margin: 20px;
+                color: white;
+                font-family: sans-serif;
+                margin: 0;
+                padding: 20px;
+            }
+            .song-item {
+                padding: 10px;
+                border-bottom: 1px solid #333;
+                cursor: pointer;
+            }
+            .song-item:hover {
+                background: #222;
             }
             #login-form {
                 background: #1e1e1e;
                 padding: 20px;
-                border-radius: 8px;
-                margin-bottom: 20px;
+                border-radius: 10px;
             }
             input {
                 padding: 10px;
-                width: 300px;
-                border-radius: 4px;
-                border: 1px solid #444;
-                background: #222;
-                color: white;
-            }
-            button {
-                padding: 10px 20px;
-                border-radius: 4px;
-                background: #0077ff;
+                width: 250px;
+                margin-bottom: 10px;
+                background: #333;
                 color: white;
                 border: none;
-                cursor: pointer;
             }
-            button:hover {
-                background: #005fcc;
+            .player-controls {
+                position: fixed;
+                bottom: 60px;
+                left: 0;
+                width: 100%;
+                background: #181818;
+                padding: 15px;
+                border-top: 1px solid #333;
+                text-align: center;
             }
-            .song-item:hover {
-                color: #0077ff;
+            .bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background: #111;
+                display: flex;
+                justify-content: center;
+                padding: 10px;
+                gap: 20px;
             }
         </style>
     </head>
     <body>
-        <h1>Melomash</h1>
-
         <div id="login-form">
-            <h3>Вход через VK</h3>
-            <input
-                type="text"
-                id="username"
-                placeholder="Телефон или Email"
-            /><br /><br />
-            <input
-                type="password"
-                id="password"
-                placeholder="Пароль"
-            /><br /><br />
-
+            <input type="text" id="username" placeholder="Телефон или Email" />
+            <input type="password" id="password" placeholder="Пароль" />
             <div id="2fa-area" style="display: none">
-                <input
-                    type="text"
-                    id="otp-code"
-                    placeholder="Код подтверждения"
-                />
+                <input type="text" id="otp-code" placeholder="Код 2FA" />
             </div>
-
-            <button id="login-btn" onclick="authAndLoad()">Войти</button>
+            <button
+                onclick="authAndLoad()"
+                style="background: #0077ff; color: white; padding: 10px"
+            >
+                Войти
+            </button>
         </div>
 
-        <div id="status">Ожидание входа...</div>
-        <hr style="border: 0.5px solid #333; margin: 20px 0" />
+        <div id="status">Ожидание...</div>
         <div id="playlist"></div>
+
+        <div class="player-controls">
+            <span id="current-track">Ничего не играет</span>
+            <button onclick="togglePlay()" id="play-btn">⏸ Пауза</button>
+        </div>
+
+        <div class="bottom-nav">
+            <button onclick="location.reload()" style="color: #0077ff">
+                VK Music
+            </button>
+            <button onclick="alert('Скоро!')" style="color: #ffcc00">
+                Yandex
+            </button>
+        </div>
 
         <script src="renderer.js"></script>
     </body>
