@@ -1,13 +1,44 @@
 {
-  "dependencies": {
-    "easyvk": "^2.8.2",
-    "hls.js": "^1.6.15"
-  },
-  "main": "main.js",
+  "name": "melomash",
+  "version": "0.1.0",
+  "main": "./out/main/index.js",
+  "type": "module",
   "scripts": {
-    "start": "electron ."
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.melomash.app",
+    "productName": "Melomash",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": "nsis"
+    },
+    "linux": {
+      "icon": "resources/icon.png",
+      "target": "AppImage",
+      "category": "AudioVideo"
+    }
   },
   "devDependencies": {
-    "electron": "^39.2.7"
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.1.0",
+    "lucide-react": "^0.562.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   }
 }
