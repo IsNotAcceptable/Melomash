@@ -23,10 +23,8 @@ function updateViewsLayout() {
 
   const [width, height] = mainWindow.getContentSize();
 
-  // Чтобы не было черных дыр, ширина вьюхи всегда рассчитывается от 80px
   const viewWidth = Math.max(0, width - SIDEBAR_COLLAPSED);
 
-  // Координата X меняется мгновенно. Плавность в Electron вызывает баги рендеринга.
   const targetX = isSidebarCollapsed ? SIDEBAR_COLLAPSED : SIDEBAR_FULL;
 
   const activeView = views[activeServiceId];
@@ -39,7 +37,6 @@ function updateViewsLayout() {
     });
   }
 
-  // Неактивные вьюхи убираем далеко
   Object.entries(views).forEach(([id, view]) => {
     if (id !== activeServiceId) {
       view.setBounds({ x: -width - 500, y: 0, width: 0, height: 0 });
@@ -87,7 +84,7 @@ async function createWindow() {
       webPreferences: {
         contextIsolation: true,
         sandbox: false,
-        backgroundThrottling: false, // Важно, чтобы музыка не заикалась
+        backgroundThrottling: false,
       },
     });
 

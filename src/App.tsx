@@ -43,23 +43,17 @@ const App: React.FC = () => {
   const toggleSidebar = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    // Мгновенно уведомляем Electron
     window.melomashAPI?.toggleSidebar(newState);
   };
 
   return (
     <div className="flex h-screen w-screen bg-[#121212] overflow-hidden text-slate-200">
-      {/* ВАЖНО: Мы убрали transition-[width] у aside.
-          Это гарантирует, что HTML-панель и нативное окно Electron (WebContentsView)
-          изменят свои координаты в один и тот же момент времени.
-      */}
       <aside
         className={`
           flex flex-col h-full bg-[#181818] border-r border-white/5 shrink-0 z-50
           ${isCollapsed ? "w-20" : "w-[260px]"}
         `}
       >
-        {/* Логотип и кнопка сворачивания */}
         <div className="p-6 flex items-center h-[88px] shrink-0 overflow-hidden">
           {!isCollapsed && (
             <div className="flex items-center gap-2 font-bold text-xl text-white tracking-tight flex-1 truncate animate-in fade-in duration-200">
@@ -83,7 +77,6 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        {/* Навигация по сервисам */}
         <nav className="flex-1 px-3 space-y-1 mt-4 overflow-y-auto custom-scrollbar">
           {SERVICES.map((service) => {
             const Icon = service.icon;
@@ -113,7 +106,6 @@ const App: React.FC = () => {
           })}
         </nav>
 
-        {/* Футер */}
         <div className="p-4 border-t border-white/5 shrink-0">
           <button className="w-full flex items-center px-4 py-3 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5">
             <Settings size={24} className="shrink-0" />
@@ -126,10 +118,6 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Этот блок main пустой.
-          Нативное окно Electron будет рисоваться поверх него,
-          начиная с правого края aside.
-      */}
       <main className="flex-1 bg-[#121212]" />
 
       <style>{`

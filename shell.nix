@@ -51,10 +51,8 @@ pkgs.mkShell {
     export ELECTRON_OVERRIDE_DIST_PATH="${pkgs.electron}/bin/electron"
     export PATH="${pkgs.electron}/bin:$PATH"
 
-    # Основные флаги для решения проблем с памятью и песочницей в NixOS
     export ELECTRON_FLAGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu-sandbox"
 
-    # Гарантируем наличие директории рантайма для Chromium
     if [ -z "$XDG_RUNTIME_DIR" ]; then
       export XDG_RUNTIME_DIR="/tmp/runtime-$USER"
       mkdir -p $XDG_RUNTIME_DIR
