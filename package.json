@@ -11,17 +11,17 @@
     "build:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.melomash.app",
+    "appId": "dev.isnotacceptable.app",
     "productName": "Melomash",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "icon": "resources/icon.ico",
+      "icon": "src/assets/icon.ico",
       "target": "nsis"
     },
     "linux": {
-      "icon": "resources/icon.png",
+      "icon": "src/assets/icon.png",
       "target": "AppImage",
       "category": "AudioVideo"
     }

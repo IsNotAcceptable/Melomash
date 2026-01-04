@@ -1,121 +1,78 @@
-import { app, BrowserWindow, WebContentsView, ipcMain, Menu } from "electron";
+import { app, BrowserWindow, Menu, session } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.commandLine.appendSwitch("no-sandbox");
-app.commandLine.appendSwitch("disable-setuid-sandbox");
-app.commandLine.appendSwitch("disable-dev-shm-usage");
-app.commandLine.appendSwitch("disable-gpu-sandbox");
-
 let mainWindow: BrowserWindow | null = null;
-const views: Record<string, WebContentsView> = {};
-let activeServiceId: string = "youtube";
-let isSidebarCollapsed = false;
-
-const SIDEBAR_FULL = 260;
-const SIDEBAR_COLLAPSED = 80;
-
-function updateViewsLayout() {
-  if (!mainWindow) return;
-
-  const [width, height] = mainWindow.getContentSize();
-
-  const viewWidth = Math.max(0, width - SIDEBAR_COLLAPSED);
-
-  const targetX = isSidebarCollapsed ? SIDEBAR_COLLAPSED : SIDEBAR_FULL;
-
-  const activeView = views[activeServiceId];
-  if (activeView) {
-    activeView.setBounds({
-      x: targetX,
-      y: 0,
-      width: viewWidth,
-      height: height,
-    });
-  }
-
-  Object.entries(views).forEach(([id, view]) => {
-    if (id !== activeServiceId) {
-      view.setBounds({ x: -width - 500, y: 0, width: 0, height: 0 });
-    }
-  });
-}
+const CHROME_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
 async function createWindow() {
-  const preloadPath = path.join(__dirname, "..", "preload", "index.js");
+  const musicSession = session.fromPartition("persist:fresh_start");
+  musicSession.setUserAgent(CHROME_USER_AGENT);
 
   mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1100,
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    backgroundColor: "#121212",
+    backgroundColor: "#181818",
     autoHideMenuBar: true,
-    show: false,
     webPreferences: {
-      preload: preloadPath,
+      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
+      webviewTag: true,
+      nodeIntegration: false,
       sandbox: false,
     },
   });
 
   Menu.setApplicationMenu(null);
 
+  musicSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    delete details.requestHeaders["X-User-Agent"];
+    callback({ requestHeaders: details.requestHeaders });
+  });
+
   if (process.env.VITE_DEV_SERVER_URL) {
     await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
-    await mainWindow.loadFile(
-      path.join(__dirname, "..", "renderer", "index.html"),
-    );
-  }
+    const indexPath = path.resolve(__dirname, "..", "renderer", "index.html");
 
-  const SERVICES = [
-    { id: "youtube", url: "https://music.youtube.com" },
-    { id: "yandex", url: "https://music.yandex.ru" },
-    { id: "spotify", url: "https://open.spotify.com" },
-    { id: "vk", url: "https://music.vk.com" },
-  ];
+    console.log("[Main] Attempting to load UI from:", indexPath);
 
-  for (const service of SERVICES) {
-    const view = new WebContentsView({
-      webPreferences: {
-        contextIsolation: true,
-        sandbox: false,
-        backgroundThrottling: false,
-      },
+    mainWindow.loadFile(indexPath).catch(async (err) => {
+      console.error("[Main] Failed to load index.html:", err);
+
+      const altPath = path.join(
+        app.getAppPath(),
+        "out",
+        "renderer",
+        "index.html",
+      );
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        console.log("[Main] Trying fallback path:", altPath);
+        await mainWindow
+          .loadFile(altPath)
+          .catch((e) => console.error("[Main] Fallback also failed:", e));
+      }
     });
-
-    view.webContents.setUserAgent(
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-    );
-
-    mainWindow.contentView.addChildView(view);
-    view.webContents.loadURL(service.url);
-    views[service.id] = view;
   }
 
-  mainWindow.once("ready-to-show", () => {
-    mainWindow?.show();
-    updateViewsLayout();
-  });
-
-  mainWindow.on("resize", () => updateViewsLayout());
-
-  ipcMain.on("switch-service", (_, id) => {
-    activeServiceId = id;
-    updateViewsLayout();
-  });
-
-  ipcMain.on("toggle-sidebar", (_, collapsed) => {
-    isSidebarCollapsed = collapsed;
-    updateViewsLayout();
+  mainWindow.on("closed", () => {
+    mainWindow = null;
   });
 }
 
+app.commandLine.appendSwitch("disable-blink-features", "AutomationControlled");
 app.whenReady().then(createWindow);
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on("activate", () => {
+  if (mainWindow === null) createWindow();
 });
