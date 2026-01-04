@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Youtube, Music, Disc, MessageCircle, Settings } from "lucide-react";
 
-// @ts-ignore
+//@ts-ignore
 import logo from "./assets/icon.png";
 
 const SERVICES = [
@@ -42,39 +42,83 @@ const App: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeId, setActiveId] = useState("youtube");
 
+  const webviewRefs = useRef<{ [key: string]: any }>({});
+
+  useEffect(() => {
+    const currentWebview = webviewRefs.current[activeId];
+    if (currentWebview) {
+      const handleAudioActivation = () => {
+        try {
+          if (currentWebview.isAudioMuted()) {
+            currentWebview.setAudioMuted(false);
+          }
+        } catch (e) {}
+
+        currentWebview.executeJavaScript(`
+          (function() {
+            const resume = () => {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (AudioCtx) {
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+              }
+            };
+
+            document.body.click();
+            const spaceEvent = new KeyboardEvent('keydown', {
+              key: ' ', code: 'Space', keyCode: 32, which: 32, bubbles: true
+            });
+            document.dispatchEvent(spaceEvent);
+
+            resume();
+            console.log('Audio Context resumed');
+          })();
+        `);
+
+        currentWebview.focus();
+      };
+
+      currentWebview.addEventListener("dom-ready", handleAudioActivation);
+      const timeout = setTimeout(handleAudioActivation, 2000);
+
+      return () => {
+        currentWebview.removeEventListener("dom-ready", handleAudioActivation);
+        clearTimeout(timeout);
+      };
+    }
+  }, [activeId]);
+
   return (
-    <div className="relative flex h-screen w-screen bg-[#181818] text-white overflow-hidden select-none font-sans">
+    <div className="relative flex h-screen w-screen bg-[#121212] text-white overflow-hidden select-none font-sans">
       <aside
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
         className={`
-          absolute left-0 top-0 h-full z-50 bg-[#181818] border-r border-white/5
+          absolute left-0 top-0 h-full z-50 bg-[#121212] border-r border-white/5
           flex flex-col transition-[width] duration-300 ease-in-out
           ${isExpanded ? "w-[260px] shadow-[20px_0_50px_rgba(0,0,0,0.8)]" : "w-20"}
         `}
       >
         <div className="h-[80px] flex items-center px-6 shrink-0 overflow-hidden">
           <div className="flex items-center gap-3 font-bold">
-            <div className="w-10 h-10 flex items-center justify-center shrink-0">
-              {logo ? (
-                <img
-                  src={logo}
-                  alt="M"
-                  className="w-full h-full object-contain pointer-events-none rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
-                      parent.innerHTML =
-                        '<div class="w-full h-full bg-indigo-600 rounded-lg flex items-center justify-center text-xs text-white">M</div>';
-                    }
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-indigo-600 rounded-lg flex items-center justify-center text-xs text-white">
-                  M
-                </div>
-              )}
+            <div className="w-10 h-10 flex items-center justify-center shrink-0 bg-white/5 rounded-lg overflow-hidden">
+              <img
+                src={logo}
+                alt="Logo"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = "none";
+                  const parent = target.parentElement;
+                  if (parent && !parent.querySelector(".fallback")) {
+                    const el = document.createElement("div");
+                    el.className =
+                      "fallback w-full h-full bg-indigo-600 flex items-center justify-center text-[10px] text-white";
+                    el.innerText = "MLM";
+                    parent.appendChild(el);
+                  }
+                }}
+              />
             </div>
             {isExpanded && (
               <span className="text-xl tracking-tighter opacity-100 transition-opacity duration-300 whitespace-nowrap">
@@ -128,12 +172,17 @@ const App: React.FC = () => {
             }`}
           >
             <webview
+              ref={(el) => {
+                if (el) webviewRefs.current[s.id] = el;
+              }}
               src={s.url}
-              partition="persist:fresh_start"
+              partition="persist:music_session"
               className="w-full h-full"
               style={{ width: "100%", height: "100%", border: "none" }}
               useragent={CHROME_USER_AGENT}
               allowpopups={true}
+              // @ts-ignore
+              webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=true, webSecurity=false, plugins=true"
             />
           </div>
         ))}
@@ -142,8 +191,6 @@ const App: React.FC = () => {
       <style>{`
         webview { display: flex; width: 100%; height: 100%; background: #000; }
         webview:focus { outline: none; }
-        .fade-in { animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </div>
   );

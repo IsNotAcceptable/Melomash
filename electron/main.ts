@@ -9,16 +9,23 @@ let mainWindow: BrowserWindow | null = null;
 const CHROME_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+app.commandLine.appendSwitch(
+  "disable-features",
+  "AudioServiceOutOfProcess,AudioServiceSandbox",
+);
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendSwitch("disable-background-timer-throttling");
+app.commandLine.appendSwitch("force-color-profile", "srgb");
+
 async function createWindow() {
-  const musicSession = session.fromPartition("persist:fresh_start");
+  const musicSession = session.fromPartition("persist:music_session");
   musicSession.setUserAgent(CHROME_USER_AGENT);
 
   mainWindow = new BrowserWindow({
-    width: 1100,
+    width: 1200,
     height: 800,
-    minWidth: 900,
-    minHeight: 600,
-    backgroundColor: "#181818",
+    backgroundColor: "#121212",
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -26,26 +33,17 @@ async function createWindow() {
       webviewTag: true,
       nodeIntegration: false,
       sandbox: false,
+      backgroundThrottling: false,
     },
   });
 
   Menu.setApplicationMenu(null);
 
-  musicSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    delete details.requestHeaders["X-User-Agent"];
-    callback({ requestHeaders: details.requestHeaders });
-  });
-
   if (process.env.VITE_DEV_SERVER_URL) {
     await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
     const indexPath = path.resolve(__dirname, "..", "renderer", "index.html");
-
-    console.log("[Main] Attempting to load UI from:", indexPath);
-
-    mainWindow.loadFile(indexPath).catch(async (err) => {
-      console.error("[Main] Failed to load index.html:", err);
-
+    mainWindow.loadFile(indexPath).catch(async () => {
       const altPath = path.join(
         app.getAppPath(),
         "out",
@@ -53,10 +51,7 @@ async function createWindow() {
         "index.html",
       );
       if (mainWindow && !mainWindow.isDestroyed()) {
-        console.log("[Main] Trying fallback path:", altPath);
-        await mainWindow
-          .loadFile(altPath)
-          .catch((e) => console.error("[Main] Fallback also failed:", e));
+        await mainWindow.loadFile(altPath);
       }
     });
   }
@@ -66,13 +61,8 @@ async function createWindow() {
   });
 }
 
-app.commandLine.appendSwitch("disable-blink-features", "AutomationControlled");
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
-});
-
-app.on("activate", () => {
-  if (mainWindow === null) createWindow();
 });
