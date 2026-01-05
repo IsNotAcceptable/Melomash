@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Youtube, Music, Disc, MessageCircle, Settings } from "lucide-react";
-import { useTheme, themes } from "./ThemeContext";
+import { useTheme, themes, getAccentColorClass } from "./ThemeContext";
 import SettingsModal from "./SettingsModal";
 import Snowflakes from "./Snowflakes";
 
@@ -13,28 +13,24 @@ const SERVICES = [
     name: "YouTube Music",
     url: "https://music.youtube.com",
     icon: Youtube,
-    color: "text-red-500",
   },
   {
     id: "yandex",
     name: "Яндекс Музыка",
     url: "https://music.yandex.ru",
     icon: Music,
-    color: "text-yellow-400",
   },
   {
     id: "spotify",
     name: "Spotify",
     url: "https://open.spotify.com",
     icon: Disc,
-    color: "text-green-500",
   },
   {
     id: "vk",
     name: "VK Музыка",
     url: "https://vk.com/audio",
     icon: MessageCircle,
-    color: "text-blue-400",
   },
 ];
 
@@ -46,7 +42,7 @@ const App: React.FC = () => {
   const [activeId, setActiveId] = useState("youtube");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const { theme, snowflakesEnabled } = useTheme();
+  const { theme, snowflakesEnabled, accentColor, customColor } = useTheme();
   const currentTheme = themes[theme];
 
   const webviewRefs = useRef<{ [key: string]: any }>({});
@@ -168,8 +164,9 @@ const App: React.FC = () => {
               }}
             >
               <s.icon
-                className={`${s.color} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
+                className={`${getAccentColorClass(accentColor, theme, customColor)} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
                 size={24}
+                style={accentColor === 'custom' ? { color: customColor } : {}}
               />
               {isExpanded && (
                 <span className="ml-4 font-medium truncate animate-in fade-in duration-300">
