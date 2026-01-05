@@ -69,4 +69,4 @@ npm run build:linux #for Linux
 
 ## 📄 Лицензия
 <img src="https://img.shields.io/github/license/IsNotAcceptable/Melomash" alt="GPL v3">
-Проект распространяется под лицензией GPL v3. Подробнее см. в файле LICENSE.
+Проект распространяется под лицензией GNU GPL v3. Подробнее см. в файле LICENSE.
