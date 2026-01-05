@@ -94,8 +94,7 @@ const App: React.FC = () => {
       };
     }
   }, [activeId]);
-
-
+  
   return (
     <div
       className="relative flex h-screen w-screen overflow-hidden select-none font-sans"

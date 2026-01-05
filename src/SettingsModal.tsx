@@ -81,6 +81,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               </button>
             </div>
 
+
             {/* Snowflakes toggle */}
             <div className="space-y-3">
               <h3 className="text-sm font-medium" style={{ color: currentTheme.textSecondary }}>
@@ -116,7 +117,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             {/* Version info */}
             <div className="pt-4 border-t" style={{ borderColor: currentTheme.border }}>
               <p className="text-center text-xs" style={{ color: currentTheme.textSecondary }}>
-                Melomash v0.1.0
+                Melomash v0.3
               </p>
             </div>
           </div>
