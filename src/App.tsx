@@ -87,7 +87,6 @@ const COSMETIC_AD_BLOCK_CSS = `
 `;
 
 const App: React.FC = () => {
-  const { theme, snowflakesEnabled } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeId, setActiveId] = useState("youtube");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
