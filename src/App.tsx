@@ -1,302 +1,198 @@
-import React, { useState } from "react";
-import {
-  Youtube,
-  Music,
-  Zap,
-  Disc,
-  MessageCircle,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
-  Layout,
-  Sun,
-  Moon,
-} from "lucide-react";
-import { useTheme } from "./ThemeContext";
-import Snow from "./Snow";
+import React, { useState, useEffect, useRef } from "react";
+import { Youtube, Music, Disc, MessageCircle, Settings } from "lucide-react";
 
-declare global {
-  interface Window {
-    melomashAPI: {
-      switchService: (id: string) => void;
-      toggleSidebar: (collapsed: boolean) => void;
-      setTheme: (theme: string) => void;
-    };
-  }
-}
+//@ts-ignore
+import logo from "./assets/icon.png";
 
 const SERVICES = [
   {
     id: "youtube",
     name: "YouTube Music",
+    url: "https://music.youtube.com",
     icon: Youtube,
     color: "text-red-500",
-    colorLight: "text-red-600",
   },
   {
     id: "yandex",
-    name: "Yandex Music",
+    name: "Яндекс Музыка",
+    url: "https://music.yandex.ru",
     icon: Music,
-    color: "text-yellow-500",
-    colorLight: "text-orange-600"
+    color: "text-yellow-400",
   },
   {
     id: "spotify",
     name: "Spotify",
+    url: "https://open.spotify.com",
     icon: Disc,
     color: "text-green-500",
-    colorLight: "text-green-600"
   },
   {
     id: "vk",
-    name: "VK Music",
+    name: "VK Музыка",
+    url: "https://vk.com/audio",
     icon: MessageCircle,
-    color: "text-blue-500",
-    colorLight: "text-blue-600"
+    color: "text-blue-400",
   },
 ];
 
+const CHROME_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
 const App: React.FC = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [activeId, setActiveId] = useState("youtube");
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const { theme, toggleTheme, snowEnabled, toggleSnow } = useTheme();
 
-  const handleSwitch = (id: string) => {
-    console.log('🎵 Switching to service:', id);
-    setActiveId(id);
-    window.melomashAPI?.switchService(id);
-  };
+  const webviewRefs = useRef<{ [key: string]: any }>({});
 
-  const toggleSidebar = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    window.melomashAPI?.toggleSidebar(newState);
-  };
+  useEffect(() => {
+    const currentWebview = webviewRefs.current[activeId];
+    if (currentWebview) {
+      const handleAudioActivation = () => {
+        try {
+          if (currentWebview.isAudioMuted()) {
+            currentWebview.setAudioMuted(false);
+          }
+        } catch (e) {}
 
-  const handleOpenSettings = () => {
-    setShowSettings(true);
-  };
+        currentWebview.executeJavaScript(`
+          (function() {
+            const resume = () => {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (AudioCtx) {
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+              }
+            };
 
-  const handleCloseSettings = () => {
-    setShowSettings(false);
-  };
+            document.body.click();
+            const spaceEvent = new KeyboardEvent('keydown', {
+              key: ' ', code: 'Space', keyCode: 32, which: 32, bubbles: true
+            });
+            document.dispatchEvent(spaceEvent);
+
+            resume();
+            console.log('Audio Context resumed');
+          })();
+        `);
+
+        currentWebview.focus();
+      };
+
+      currentWebview.addEventListener("dom-ready", handleAudioActivation);
+      const timeout = setTimeout(handleAudioActivation, 2000);
+
+      return () => {
+        currentWebview.removeEventListener("dom-ready", handleAudioActivation);
+        clearTimeout(timeout);
+      };
+    }
+  }, [activeId]);
 
   return (
-    <>
-      <Snow enabled={snowEnabled} />
-      <div className="flex h-screen w-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
-        <aside
-          className={`
-            flex flex-col h-full bg-[#181818] border-r border-white/5 shrink-0 z-50
-            ${isCollapsed ? "w-20" : "w-[260px]"}
-          `}
-        >
-          <div className="p-6 flex items-center h-[88px] shrink-0 overflow-hidden">
-            {!isCollapsed && (
-              <div className="flex items-center gap-2 font-bold text-xl text-white tracking-tight flex-1 truncate animate-in fade-in duration-200">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
-                  <Zap size={18} className="text-white" />
-                </div>
-                <span className="truncate">Melomash</span>
-              </div>
+    <div className="relative flex h-screen w-screen bg-[#121212] text-white overflow-hidden select-none font-sans">
+      <aside
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+        className={`
+          absolute left-0 top-0 h-full z-50 bg-[#121212] border-r border-white/5
+          flex flex-col transition-[width] duration-300 ease-in-out
+          ${isExpanded ? "w-[260px] shadow-[20px_0_50px_rgba(0,0,0,0.8)]" : "w-20"}
+        `}
+      >
+        <div className="h-[80px] flex items-center px-6 shrink-0 overflow-hidden">
+          <div className="flex items-center gap-3 font-bold">
+            <div className="w-10 h-10 flex items-center justify-center shrink-0 bg-white/5 rounded-lg overflow-hidden">
+              <img
+                src={logo}
+                alt="Logo"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = "none";
+                  const parent = target.parentElement;
+                  if (parent && !parent.querySelector(".fallback")) {
+                    const el = document.createElement("div");
+                    el.className =
+                      "fallback w-full h-full bg-indigo-600 flex items-center justify-center text-[10px] text-white";
+                    el.innerText = "MLM";
+                    parent.appendChild(el);
+                  }
+                }}
+              />
+            </div>
+            {isExpanded && (
+              <span className="text-xl tracking-tighter opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                Melomash
+              </span>
             )}
-            <button
-              onClick={toggleSidebar}
-              className={`p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-colors ${
-                isCollapsed ? "mx-auto" : "ml-auto"
-              }`}
-            >
-              {isCollapsed ? (
-                <ChevronRight size={20} />
-              ) : (
-                <ChevronLeft size={20} />
-              )}
-            </button>
           </div>
+        </div>
 
-          <nav className="flex-1 px-3 space-y-1 mt-4 overflow-y-auto custom-scrollbar">
-            {SERVICES.map((service) => {
-              const Icon = service.icon;
-              const isActive = activeId === service.id;
-
-              return (
-                <button
-                  key={service.id}
-                  onClick={() => handleSwitch(service.id)}
-                  className={`w-full flex items-center px-4 py-3 rounded-xl transition-colors group relative ${
-                    isActive
-                      ? "bg-white/10 text-white"
-                      : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
-                  }`}
-                >
-                  <Icon
-                    className={`${service.color} ${isActive ? "scale-110" : "group-hover:scale-110"} transition-transform shrink-0`}
-                    size={24}
-                  />
-                  {!isCollapsed && (
-                    <span className="ml-4 font-medium truncate animate-in fade-in duration-300">
-                      {service.name}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="p-4 border-t border-white/5 shrink-0">
+        <nav className="flex-1 px-3 mt-4 space-y-2">
+          {SERVICES.map((s) => (
             <button
-              onClick={() => setShowSettings(true)}
-              className="w-full flex items-center px-4 py-3 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+              key={s.id}
+              onClick={() => setActiveId(s.id)}
+              className={`
+                w-full flex items-center p-3 rounded-xl transition-all duration-200
+                ${activeId === s.id ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}
+              `}
             >
-              <Settings size={24} className="shrink-0" />
-              {!isCollapsed && (
-                <span className="ml-4 font-medium truncate animate-in fade-in">
-                  Настройки
+              <s.icon
+                className={`${s.color} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
+                size={24}
+              />
+              {isExpanded && (
+                <span className="ml-4 font-medium truncate animate-in fade-in duration-300">
+                  {s.name}
                 </span>
               )}
             </button>
-          </div>
-        </aside>
+          ))}
+        </nav>
 
-        <main className="flex-1 bg-[#121212]" />
+        <div className="p-4 border-t border-white/5 mt-auto">
+          <button className="w-full flex items-center p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+            <Settings size={24} />
+            {isExpanded && (
+              <span className="ml-4 font-medium truncate">Настройки</span>
+            )}
+          </button>
+        </div>
+      </aside>
 
-        {/* Модальное окно настроек */}
-        {showSettings && (
+      <main className="flex-1 ml-20 h-full relative bg-black">
+        {SERVICES.map((s) => (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(4px)',
-            }}
-            onClick={() => setShowSettings(false)}
+            key={s.id}
+            className={`absolute inset-0 transition-opacity duration-500 ${
+              activeId === s.id
+                ? "opacity-100 z-10"
+                : "opacity-0 z-0 pointer-events-none"
+            }`}
           >
-            <div
-              className="relative max-w-md w-full mx-4 rounded-2xl p-6 shadow-2xl"
-              style={{
-                backgroundColor: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
+            <webview
+              ref={(el) => {
+                if (el) webviewRefs.current[s.id] = el;
               }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Заголовок */}
-              <div className="flex items-center justify-between mb-6">
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  Настройки
-                </h2>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  style={{
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Настройки темы */}
-              <div className="space-y-4">
-                <div>
-                  <h3
-                    className="text-sm font-medium mb-3 uppercase tracking-wide"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    Внешний вид
-                  </h3>
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        if (theme !== 'light') toggleTheme();
-                      }}
-                      className="w-full flex items-center justify-between p-4 rounded-xl transition-colors"
-                      style={{
-                        backgroundColor: theme === 'light' ? 'var(--bg-accent)' : 'transparent',
-                        border: theme === 'light' ? '1px solid var(--border-color)' : 'none',
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Sun size={20} style={{ color: 'var(--text-muted)' }} />
-                        <span style={{ color: 'var(--text-primary)' }}>Светлая тема</span>
-                      </div>
-                      {theme === 'light' && (
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: 'var(--gradient-end)' }}
-                        />
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (theme !== 'dark') toggleTheme();
-                      }}
-                      className="w-full flex items-center justify-between p-4 rounded-xl transition-colors"
-                      style={{
-                        backgroundColor: theme === 'dark' ? 'var(--bg-accent)' : 'transparent',
-                        border: theme === 'dark' ? '1px solid var(--border-color)' : 'none',
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Moon size={20} style={{ color: 'var(--text-muted)' }} />
-                        <span style={{ color: 'var(--text-primary)' }}>Темная тема</span>
-                      </div>
-                      {theme === 'dark' && (
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: 'var(--gradient-end)' }}
-                        />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Настройка снега */}
-                  <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={toggleSnow}
-                      className="w-full flex items-center justify-between p-4 rounded-xl transition-colors"
-                      style={{
-                        backgroundColor: snowEnabled ? 'var(--bg-accent)' : 'transparent',
-                        border: snowEnabled ? '1px solid var(--border-color)' : 'none',
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-lg">❄️</div>
-                        <span style={{ color: 'var(--text-primary)' }}>Падающий снег</span>
-                      </div>
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: snowEnabled ? 'var(--gradient-end)' : 'var(--text-muted)',
-                          opacity: snowEnabled ? 1 : 0.5
-                        }}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              src={s.url}
+              partition="persist:music_session"
+              className="w-full h-full"
+              style={{ width: "100%", height: "100%", border: "none" }}
+              useragent={CHROME_USER_AGENT}
+              allowpopups={true}
+              // @ts-ignore
+              webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=true, webSecurity=false, plugins=true"
+            />
           </div>
-        )}
+        ))}
+      </main>
 
-        <style>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-          }
-        `}</style>
-      </div>
-    </>
+      <style>{`
+        webview { display: flex; width: 100%; height: 100%; background: #000; }
+        webview:focus { outline: none; }
+      `}</style>
+    </div>
   );
 };
 
