@@ -11,7 +11,7 @@
     "build:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "dev.isnotacceptable.app",
+    "appId": "dev.isnotacceptable.melomash",
     "productName": "Melomash",
     "directories": {
       "output": "dist"
