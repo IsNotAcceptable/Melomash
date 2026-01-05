@@ -20,12 +20,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div
-        className="relative max-w-md w-full mx-4 rounded-2xl border shadow-2xl overflow-hidden"
+        className="relative max-w-xl w-full mx-4 rounded-2xl border shadow-2xl overflow-hidden"
         style={{
           backgroundColor: currentTheme.sidebar,
           borderColor: currentTheme.border,
           color: currentTheme.text,
-          maxHeight: '90vh'
+          maxHeight: '95vh'
         }}
       >
         {/* Header */}
@@ -75,7 +75,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1"
           style={{
-            maxHeight: 'calc(90vh - 140px)', // Вычитаем высоту заголовка и табов
+            maxHeight: 'calc(95vh - 140px)', // Вычитаем высоту заголовка и табов
             scrollbarWidth: 'thin',
             scrollbarColor: `${currentTheme.textSecondary} transparent`
           }}>
@@ -241,24 +241,65 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         </p>
                       </div>
 
-                      {/* Улучшенный color picker */}
+                      {/* Современный color picker */}
                       <div className="relative group">
-                        <input
-                          type="color"
-                          value={customColor}
-                          onChange={(e) => setCustomColor(e.target.value)}
-                          className="w-full h-16 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-102 hover:shadow-2xl border-4"
+                        <div className="relative overflow-hidden rounded-2xl border-4 transition-all duration-300 hover:scale-102 hover:shadow-2xl"
                           style={{
                             borderColor: currentTheme.border,
                             boxShadow: `0 8px 32px rgba(0, 0, 0, 0.12)`,
-                            background: 'transparent'
-                          }}
-                        />
-                        <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                          style={{
-                            background: `linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)`
-                          }}
-                        />
+                            background: `linear-gradient(135deg, ${customColor}20 0%, ${customColor}40 50%, ${customColor}20 100%)`
+                          }}>
+                          {/* Спектр цветов */}
+                          <div className="absolute inset-0 opacity-90">
+                            <div className="w-full h-full rounded-2xl"
+                              style={{
+                                background: `
+                                  linear-gradient(45deg,
+                                    #ff0000 0%, #ffff00 17%, #00ff00 33%,
+                                    #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%
+                                  ),
+                                  linear-gradient(90deg,
+                                    #ffffff 0%, rgba(255,255,255,0) 50%, #000000 100%
+                                  )
+                                `,
+                                backgroundBlendMode: 'multiply'
+                              }}
+                            />
+                          </div>
+
+                          {/* Скрытый color input */}
+                          <input
+                            type="color"
+                            value={customColor}
+                            onChange={(e) => setCustomColor(e.target.value)}
+                            className="relative w-full h-20 cursor-pointer opacity-0 z-10"
+                          />
+
+                          {/* Декоративные элементы */}
+                          <div className="absolute inset-0 rounded-2xl pointer-events-none">
+                            <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-white/30 animate-pulse" />
+                            <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-white/20 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                            <div className="absolute bottom-3 left-6 w-2 h-2 rounded-full bg-white/25 animate-pulse" style={{ animationDelay: '1s' }} />
+                          </div>
+
+                          {/* Текст-подсказка */}
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="text-center">
+                              <div className="w-8 h-8 mx-auto mb-2 rounded-full border-2 border-white/50 flex items-center justify-center"
+                                style={{ backgroundColor: customColor }}>
+                                <Palette size={16} className="text-white drop-shadow-lg" />
+                              </div>
+                              <p className="text-white text-sm font-medium drop-shadow-lg">
+                                Нажмите для выбора цвета
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Hover подсказка */}
+                        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                          🎨 Кликните где угодно на спектре
+                        </div>
                       </div>
                     </div>
 
