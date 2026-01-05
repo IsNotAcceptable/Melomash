@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Youtube, Music, Disc, MessageCircle, Settings } from "lucide-react";
+import { useTheme, themes } from "./ThemeContext";
+import SettingsModal from "./SettingsModal";
+import Snowflakes from "./Snowflakes";
 
 //@ts-ignore
 import logo from "./assets/icon.png";
@@ -41,6 +44,10 @@ const CHROME_USER_AGENT =
 const App: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeId, setActiveId] = useState("youtube");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const { theme, snowflakesEnabled } = useTheme();
+  const currentTheme = themes[theme];
 
   const webviewRefs = useRef<{ [key: string]: any }>({});
 
@@ -87,21 +94,30 @@ const App: React.FC = () => {
       };
     }
   }, [activeId]);
-
+  
   return (
-    <div className="relative flex h-screen w-screen bg-[#121212] text-white overflow-hidden select-none font-sans">
+    <div
+      className="relative flex h-screen w-screen overflow-hidden select-none font-sans"
+      style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
+    >
       <aside
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
         className={`
-          absolute left-0 top-0 h-full z-50 bg-[#121212] border-r border-white/5
-          flex flex-col transition-[width] duration-300 ease-in-out
+          absolute left-0 top-0 h-full z-50 flex flex-col transition-[width] duration-300 ease-in-out
           ${isExpanded ? "w-[260px] shadow-[20px_0_50px_rgba(0,0,0,0.8)]" : "w-20"}
         `}
+        style={{
+          backgroundColor: currentTheme.sidebar,
+          borderRight: `1px solid ${currentTheme.border}`
+        }}
       >
         <div className="h-[80px] flex items-center px-6 shrink-0 overflow-hidden">
           <div className="flex items-center gap-3 font-bold">
-            <div className="w-10 h-10 flex items-center justify-center shrink-0 bg-white/5 rounded-lg overflow-hidden">
+            <div
+              className="w-10 h-10 flex items-center justify-center shrink-0 rounded-lg overflow-hidden"
+              style={{ backgroundColor: currentTheme.logoBg }}
+            >
               <img
                 src={logo}
                 alt="Logo"
@@ -135,8 +151,21 @@ const App: React.FC = () => {
               onClick={() => setActiveId(s.id)}
               className={`
                 w-full flex items-center p-3 rounded-xl transition-all duration-200
-                ${activeId === s.id ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}
               `}
+              style={{
+                backgroundColor: activeId === s.id ? currentTheme.active : 'transparent',
+                color: activeId === s.id ? currentTheme.text : currentTheme.textSecondary,
+              }}
+              onMouseEnter={(e) => {
+                if (activeId !== s.id) {
+                  e.currentTarget.style.backgroundColor = currentTheme.hover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeId !== s.id) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
             >
               <s.icon
                 className={`${s.color} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
@@ -151,8 +180,26 @@ const App: React.FC = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5 mt-auto">
-          <button className="w-full flex items-center p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+        <div
+          className="p-4 mt-auto"
+          style={{ borderTop: `1px solid ${currentTheme.border}` }}
+        >
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="w-full flex items-center p-3 rounded-xl transition-all"
+            style={{
+              color: currentTheme.textSecondary,
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = currentTheme.hover;
+              e.currentTarget.style.color = currentTheme.text;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = currentTheme.textSecondary;
+            }}
+          >
             <Settings size={24} />
             {isExpanded && (
               <span className="ml-4 font-medium truncate">Настройки</span>
@@ -161,7 +208,10 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 ml-20 h-full relative bg-black">
+      <main
+        className="flex-1 ml-20 h-full relative"
+        style={{ backgroundColor: currentTheme.main }}
+      >
         {SERVICES.map((s) => (
           <div
             key={s.id}
@@ -189,9 +239,21 @@ const App: React.FC = () => {
       </main>
 
       <style>{`
-        webview { display: flex; width: 100%; height: 100%; background: #000; }
+        webview {
+          display: flex;
+          width: 100%;
+          height: 100%;
+          background: ${currentTheme.main};
+        }
         webview:focus { outline: none; }
       `}</style>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <Snowflakes enabled={snowflakesEnabled} />
     </div>
   );
 };
