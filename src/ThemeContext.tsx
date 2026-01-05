@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Theme = 'dark' | 'light';
-type AccentColor = 'blue' | 'green' | 'purple' | 'red' | 'orange' | 'pink' | 'yellow' | 'auto' | 'custom';
+type AccentColor = 'blue' | 'green' | 'purple' | 'red' | 'orange' | 'pink' | 'yellow' | 'sky' | 'auto';
 
 interface ThemeContextType {
   theme: Theme;
@@ -124,10 +124,7 @@ export const useTheme = () => {
   return context;
 };
 
-export const getAccentColorClass = (accentColor: AccentColor, theme: Theme, customColor: string): string => {
-  if (accentColor === 'custom') {
-    return 'text-current';
-  }
+export const getAccentColorClass = (accentColor: AccentColor, theme: Theme): string => {
   if (accentColor === 'auto') {
     return theme === 'dark' ? 'text-white' : 'text-black';
   }
@@ -140,14 +137,12 @@ export const getAccentColorClass = (accentColor: AccentColor, theme: Theme, cust
     orange: 'text-orange-500',
     pink: 'text-pink-500',
     yellow: 'text-yellow-500',
+    sky: 'text-sky-500',
   };
   return accentColors[accentColor];
 };
 
-export const getAccentColorValue = (accentColor: AccentColor, theme: Theme, customColor: string): string => {
-  if (accentColor === 'custom') {
-    return customColor;
-  }
+export const getAccentColorValue = (accentColor: AccentColor, theme: Theme): string => {
   if (accentColor === 'auto') {
     return theme === 'dark' ? '#FFFFFF' : '#000000';
   }
@@ -160,6 +155,7 @@ export const getAccentColorValue = (accentColor: AccentColor, theme: Theme, cust
     orange: '#F97316',
     pink: '#EC4899',
     yellow: '#EAB308',
+    sky: '#0EA5E9',
   };
   return accentColorValues[accentColor];
 };

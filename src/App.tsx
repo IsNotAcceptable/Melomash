@@ -164,9 +164,8 @@ const App: React.FC = () => {
               }}
             >
               <s.icon
-                className={`${getAccentColorClass(accentColor, theme, customColor)} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
+                className={`${getAccentColorClass(accentColor, theme)} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
                 size={24}
-                style={accentColor === 'custom' ? { color: customColor } : {}}
               />
               {isExpanded && (
                 <span className="ml-4 font-medium truncate animate-in fade-in duration-300">
