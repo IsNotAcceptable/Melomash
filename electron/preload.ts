@@ -1,19 +1,26 @@
-import { contextBridge } from "electron";
+import { contextBridge, ipcRenderer } from "electron";
 
 declare global {
   interface Window {
-    chrome: any;
+    electron: {
+      selectFolder: () => Promise<string | undefined>;
+      getAudioFiles: (folderPath: string) => Promise<any[]>;
+    };
   }
 }
 
 const maskScript = () => {
+  const win = window as any;
+
   Object.defineProperty(navigator, "webdriver", { get: () => undefined });
 
   Object.defineProperty(navigator, "platform", { get: () => "Win32" });
 
-  window.chrome = {
+  win.chrome = {
     app: { isInstalled: false },
-    runtime: { OnInstalledReason: { INSTALL: "install" } },
+    runtime: {
+      OnInstalledReason: { INSTALL: "install" },
+    },
     loadTimes: () => ({}),
     csi: () => ({}),
   };
@@ -27,4 +34,8 @@ const maskScript = () => {
 
 maskScript();
 
-contextBridge.exposeInMainWorld("electron", {});
+contextBridge.exposeInMainWorld("electron", {
+  selectFolder: () => ipcRenderer.invoke("select-folder"),
+  getAudioFiles: (folderPath: string) =>
+    ipcRenderer.invoke("get-audio-files", folderPath),
+});

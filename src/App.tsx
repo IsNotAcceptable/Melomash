@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Youtube, Music, Disc, MessageCircle, Settings } from "lucide-react";
-import { useTheme, themes, getAccentColorClass } from "./ThemeContext";
-import SettingsModal from "./SettingsModal";
-import Snowflakes from "./Snowflakes";
+import {
+  Youtube,
+  Music,
+  Disc,
+  MessageCircle,
+  Settings,
+  HardDrive,
+} from "lucide-react";
+import { useTheme, themes, getAccentColorClass } from "./context/ThemeContext";
+import SettingsModal from "./components/SettingsModal";
+import Snowflakes from "./components/Snowflakes";
+import LocalPlayer from "./components/LocalPlayer";
 
 //@ts-ignore
 import logo from "./assets/icon.png";
@@ -13,24 +21,34 @@ const SERVICES = [
     name: "YouTube Music",
     url: "https://music.youtube.com",
     icon: Youtube,
+    type: "web",
   },
   {
     id: "yandex",
     name: "Яндекс Музыка",
     url: "https://music.yandex.ru",
     icon: Music,
+    type: "web",
   },
   {
     id: "spotify",
     name: "Spotify",
     url: "https://open.spotify.com",
     icon: Disc,
+    type: "web",
   },
   {
     id: "vk",
     name: "VK Музыка",
     url: "https://vk.com/audio",
     icon: MessageCircle,
+    type: "web",
+  },
+  {
+    id: "local",
+    name: "Локальный диск",
+    icon: HardDrive,
+    type: "local",
   },
 ];
 
@@ -41,208 +59,125 @@ const COSMETIC_AD_BLOCK_CSS = `
   iframe[src*="googleads"],
   div[id*="ad-unit"],
   div[class*="advertising"],
-  ins.adsbygoogle { display: none !important; height: 0 !important; width: 0 !important; }
-
-  .d-main-layout__column_right,
-  aside.d-main-layout__column_right,
-  .deco-ads-wrapper,
-  .bar-below-ads,
-  [class*="Ad-module"],
-  [class*="Ads-module"],
-  .d-main-layout__column_right_is-hidden {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    visibility: hidden !important;
-    position: absolute !important;
-    pointer-events: none !important;
-  }
-
-  .d-main-layout__main {
-    margin-right: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 1 1 auto !important;
-  }
-
-  .d-main-layout__column_center {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .page-root .page-root__main,
-  .centerblock-wrapper,
-  .page-index__main,
-  .page-artist__main,
-  .page-playlist__main {
-    max-width: none !important;
-    margin-right: 0 !important;
-    padding-right: 30px !important;
-    width: 100% !important;
-  }
-
-  .d-track_ads, .ads-block { display: none !important; }
+  ins.adsbygoogle { display: none !important; }
 `;
 
 const App: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [activeId, setActiveId] = useState("youtube");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  const { theme, snowflakesEnabled, accentColor, customColor } = useTheme();
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const { theme, snowflakesEnabled, accentColor } = useTheme();
   const currentTheme = themes[theme];
+
   const webviewRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
-    const applyInjects = (id: string) => {
-      const wv = webviewRefs.current[id];
-      if (!wv) return;
-
-      const onDomReady = () => {
-        wv.insertCSS(COSMETIC_AD_BLOCK_CSS);
-
-        if (id === "yandex") {
-          wv.executeJavaScript(`
-            (function() {
-              const cleanYandex = () => {
-                const targets = [
-                  '.d-main-layout__column_right',
-                  '.deco-ads-wrapper',
-                  '.bar-below-ads',
-                  'aside.d-main-layout__column_right'
-                ];
-
-                targets.forEach(sel => {
-                  const el = document.querySelector(sel);
-                  if (el) el.remove();
-                });
-
-                const main = document.querySelector('.d-main-layout__main');
-                if (main) {
-                  main.style.setProperty('margin-right', '0', 'important');
-                  main.style.setProperty('width', '100%', 'important');
-                  main.style.setProperty('max-width', '100%', 'important');
-                }
-              };
-
-              const observer = new MutationObserver(cleanYandex);
-              observer.observe(document.body, { childList: true, subtree: true });
-
-              cleanYandex();
-              setTimeout(cleanYandex, 2000);
-              setTimeout(cleanYandex, 5000);
-            })();
-          `);
-        }
-
-        wv.executeJavaScript(`
-          (function() {
-            const resume = () => {
-              const AudioCtx = window.AudioContext || window.webkitAudioContext;
-              if (AudioCtx) {
-                const ctx = new AudioCtx();
-                if (ctx.state === 'suspended') ctx.resume();
-              }
-            };
-            document.body.click();
-            resume();
-          })();
-        `);
-      };
-
-      wv.addEventListener("dom-ready", onDomReady);
-      return () => wv.removeEventListener("dom-ready", onDomReady);
+    const applyAdBlock = (id: string) => {
+      const webview = webviewRefs.current[id];
+      if (webview) {
+        const handleDomReady = () => {
+          webview.insertCSS(COSMETIC_AD_BLOCK_CSS);
+        };
+        webview.addEventListener("dom-ready", handleDomReady);
+        return () => webview.removeEventListener("dom-ready", handleDomReady);
+      }
     };
 
-    SERVICES.forEach((s) => applyInjects(s.id));
+    SERVICES.forEach((s) => {
+      if (s.type === "web") applyAdBlock(s.id);
+    });
   }, []);
 
   return (
     <div
-      className="relative flex h-screen w-screen overflow-hidden select-none font-sans transition-colors duration-300"
-      style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
+      className="flex h-screen w-screen overflow-hidden font-sans select-none"
+      style={{ backgroundColor: currentTheme.bg }}
     >
       <Snowflakes enabled={snowflakesEnabled} />
 
       <aside
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
-        className="absolute left-0 top-0 h-full z-50 border-r transition-[width] duration-300 ease-in-out flex flex-col"
+        onMouseEnter={() => setIsSidebarExpanded(true)}
+        onMouseLeave={() => setIsSidebarExpanded(false)}
+        className={`flex flex-col items-start py-6 z-50 fixed left-0 top-0 bottom-0 border-r transition-all duration-300 ease-in-out px-4 ${
+          isSidebarExpanded ? "w-64" : "w-20"
+        }`}
         style={{
-          width: isExpanded ? "260px" : "80px",
           backgroundColor: currentTheme.sidebar,
           borderColor: currentTheme.border,
-          boxShadow: isExpanded ? "10px 0 30px rgba(0,0,0,0.2)" : "none",
         }}
       >
-        <div className="h-[80px] flex items-center px-5 shrink-0 overflow-hidden">
-          <div className="flex items-center gap-4">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-              style={{ backgroundColor: currentTheme.logoBg }}
-            >
-              <img
-                src={logo}
-                alt="Logo"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "https://img.icons8.com/fluency/48/music.png";
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center mb-10 shadow-lg shrink-0 self-center transition-transform duration-300"
+          style={{ backgroundColor: currentTheme.logoBg }}
+        >
+          <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
+        </div>
+
+        <nav className="flex flex-col gap-3 flex-1 w-full">
+          {SERVICES.map((service) => {
+            const Icon = service.icon;
+            const isActive = activeId === service.id;
+            return (
+              <button
+                key={service.id}
+                onClick={() => setActiveId(service.id)}
+                className={`flex items-center gap-4 p-3 rounded-2xl transition-all duration-300 w-full overflow-hidden ${
+                  isActive ? "bg-white/10" : "hover:bg-white/5"
+                }`}
+                style={{
+                  backgroundColor: isActive
+                    ? currentTheme.active
+                    : "transparent",
                 }}
+              >
+                <div className="shrink-0">
+                  <Icon
+                    size={24}
+                    className={
+                      isActive
+                        ? getAccentColorClass(accentColor, theme)
+                        : "text-gray-500"
+                    }
+                  />
+                </div>
+                <span
+                  className={`font-medium text-sm whitespace-nowrap transition-opacity duration-300 ${
+                    isSidebarExpanded ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{
+                    color: isActive
+                      ? currentTheme.text
+                      : currentTheme.textSecondary,
+                  }}
+                >
+                  {service.name}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="w-full flex flex-col gap-3">
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="flex items-center gap-4 p-3 rounded-2xl group transition-all w-full overflow-hidden hover:bg-white/5"
+            style={{
+              backgroundColor: isSettingsOpen
+                ? currentTheme.active
+                : "transparent",
+            }}
+          >
+            <div className="shrink-0">
+              <Settings
+                size={24}
+                className={`text-gray-500 transition-transform duration-500 ${isSettingsOpen ? "rotate-90" : "group-hover:rotate-45"}`}
               />
             </div>
             <span
-              className={`text-xl font-bold tracking-tight transition-opacity duration-300 whitespace-nowrap ${
-                isExpanded ? "opacity-100" : "opacity-0"
+              className={`font-medium text-sm whitespace-nowrap transition-opacity duration-300 ${
+                isSidebarExpanded ? "opacity-100" : "opacity-0"
               }`}
-            >
-              Melomash
-            </span>
-          </div>
-        </div>
-
-        <nav className="flex-1 px-3 mt-4 space-y-2">
-          {SERVICES.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setActiveId(s.id)}
-              className="w-full flex items-center p-3 rounded-xl transition-all duration-200 group"
-              style={{
-                backgroundColor:
-                  activeId === s.id ? currentTheme.active : "transparent",
-              }}
-            >
-              <s.icon
-                className={`${getAccentColorClass(accentColor, theme)} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
-                size={24}
-              />
-              <span
-                className={`ml-4 font-medium truncate transition-opacity duration-300 ${
-                  isExpanded ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                {s.name}
-              </span>
-            </button>
-          ))}
-        </nav>
-
-        <div
-          className="p-4 border-t"
-          style={{ borderColor: currentTheme.border }}
-        >
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="w-full flex items-center p-3 rounded-xl transition-all hover:opacity-80"
-            style={{ backgroundColor: currentTheme.hover }}
-          >
-            <Settings size={24} style={{ color: currentTheme.textSecondary }} />
-            <span
-              className={`ml-4 font-medium transition-opacity duration-300 ${
-                isExpanded ? "opacity-100" : "opacity-0"
-              }`}
+              style={{ color: currentTheme.textSecondary }}
             >
               Настройки
             </span>
@@ -263,19 +198,22 @@ const App: React.FC = () => {
                 : "opacity-0 z-0 pointer-events-none"
             }`}
           >
-            <webview
-              ref={(el) => {
-                if (el) webviewRefs.current[s.id] = el;
-              }}
-              src={s.url}
-              partition="persist:music_session"
-              className="w-full h-full"
-              style={{ width: "100%", height: "100%", border: "none" }}
-              useragent={CHROME_USER_AGENT}
-              allowpopups={true}
-              // @ts-ignore
-              webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=true, webSecurity=false, plugins=true"
-            />
+            {s.type === "local" ? (
+              <LocalPlayer />
+            ) : (
+              <webview
+                ref={(el) => {
+                  if (el) webviewRefs.current[s.id] = el;
+                }}
+                src={s.url}
+                partition="persist:music_session"
+                className="w-full h-full"
+                useragent={CHROME_USER_AGENT}
+                allowpopups={true}
+                // @ts-ignore
+                webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=true, webSecurity=false, plugins=true"
+              />
+            )}
           </div>
         ))}
       </main>

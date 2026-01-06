@@ -1,5 +1,6 @@
-import { app, BrowserWindow, Menu, session } from "electron";
+import { app, BrowserWindow, Menu, session, ipcMain, dialog } from "electron";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,13 +30,6 @@ const AD_BLOCK_PATTERNS = [
 ];
 
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
-app.commandLine.appendSwitch(
-  "disable-features",
-  "AudioServiceOutOfProcess,AudioServiceSandbox",
-);
-app.commandLine.appendSwitch("disable-renderer-backgrounding");
-app.commandLine.appendSwitch("disable-background-timer-throttling");
-app.commandLine.appendSwitch("force-color-profile", "srgb");
 
 async function createWindow() {
   const musicSession = session.fromPartition("persist:music_session");
@@ -52,6 +46,18 @@ async function createWindow() {
     console.error("Ошибка инициализации блокировщика рекламы:", error);
   }
 
+  session.defaultSession.protocol.registerFileProtocol(
+    "local-audio",
+    (request, callback) => {
+      const url = request.url.replace("local-audio://", "");
+      try {
+        return callback(decodeURIComponent(url));
+      } catch (error) {
+        console.error("Protocol error:", error);
+      }
+    },
+  );
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -64,10 +70,35 @@ async function createWindow() {
       nodeIntegration: false,
       sandbox: false,
       backgroundThrottling: false,
+      webSecurity: true,
     },
   });
 
   Menu.setApplicationMenu(null);
+
+  ipcMain.handle("select-folder", async () => {
+    const result = await dialog.showOpenDialog(mainWindow!, {
+      properties: ["openDirectory"],
+    });
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle("get-audio-files", async (_event, folderPath: string) => {
+    if (!folderPath || !fs.existsSync(folderPath)) return [];
+    try {
+      const files = fs.readdirSync(folderPath);
+      return files
+        .filter((file) => /\.(mp3|wav|ogg|flac|m4a)$/i.test(file))
+        .map((file) => ({
+          name: file,
+          path: path.join(folderPath, file),
+          url: `local-audio://${path.join(folderPath, file)}`,
+        }));
+    } catch (err) {
+      console.error("Ошибка чтения папки:", err);
+      return [];
+    }
+  });
 
   if (process.env.VITE_DEV_SERVER_URL) {
     await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
@@ -90,9 +121,7 @@ async function createWindow() {
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
-
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
