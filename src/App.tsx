@@ -1,36 +1,76 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Youtube, Music, Disc, MessageCircle, Cog } from "lucide-react";
+import { Sparkle, Cog } from "lucide-react";
 import { useTheme, themes, getAccentColorClass, getAccentColorValue } from "./ThemeContext";
 import SettingsModal from "./SettingsModal";
 import Snowflakes from "./Snowflakes";
+import {siVk, siSpotify, siYoutubemusic} from "simple-icons";
 
 //@ts-ignore
 import logo from "./assets/icon.png";
 
-const SERVICES = [
+type Service = {
+  id: string;
+  name: string;
+  url: string;
+  icon: any;
+  iconType: "simple" | "lucide";
+};
+
+// Компонент для simple-icons
+const SimpleIcon = ({
+  icon,
+  size = 24,
+  className = "",
+  color
+}: {
+  icon: any,
+  size?: number,
+  className?: string,
+  color?: string
+}) => (
+  <div
+    className={`${className}`}
+    style={{
+      width: `${size}px`,
+      height: `${size}px`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+    dangerouslySetInnerHTML={{
+      __html: icon.svg.replace('<svg', `<svg fill="${color || 'currentColor'}"`)
+    }}
+  />
+);
+
+const SERVICES: Service[] = [
   {
     id: "youtube",
     name: "YouTube Music",
     url: "https://music.youtube.com",
-    icon: Youtube,
+    icon: siYoutubemusic,
+    iconType: "simple"
   },
   {
     id: "yandex",
     name: "Яндекс Музыка",
     url: "https://music.yandex.ru",
-    icon: Music,
+    icon: Sparkle,
+    iconType: "lucide"
   },
   {
     id: "spotify",
     name: "Spotify",
     url: "https://open.spotify.com",
-    icon: Disc,
+    icon: siSpotify,
+    iconType: "simple"
   },
   {
     id: "vk",
     name: "VK Музыка",
     url: "https://vk.com/audio",
-    icon: MessageCircle,
+    icon: siVk,
+    iconType: "simple"
   },
 ];
 
@@ -210,14 +250,22 @@ const App: React.FC = () => {
               onClick={() => setActiveId(s.id)}
               className="w-full flex items-center p-3 rounded-xl transition-all duration-200 group"
               style={{
-                backgroundColor:
-                  activeId === s.id ? currentTheme.active : "transparent",
+                backgroundColor: activeId === s.id ? "rgba(255, 255, 255, 0.1)" : "transparent",
               }}
             >
-              <s.icon
-                className={`${getAccentColorClass(accentColor, theme)} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
-                size={24}
-              />
+              {s.iconType === "simple" ? (
+                <SimpleIcon
+                  icon={s.icon}
+                  size={24}
+                  color={getAccentColorValue(accentColor, theme)}
+                  className="shrink-0"
+                />
+              ) : (
+                React.createElement(s.icon, {
+                  className: `shrink-0 ${getAccentColorClass(accentColor, theme)}`,
+                  size: 24
+                })
+              )}
               <span
                 className={`ml-4 font-medium truncate transition-opacity duration-300 ${
                   isExpanded ? "opacity-100" : "opacity-0"
@@ -237,7 +285,7 @@ const App: React.FC = () => {
             onClick={() => setIsSettingsOpen(true)}
             className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 group`}
             style={{
-              backgroundColor: "transparent",
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
             }}
           >
             <Cog
