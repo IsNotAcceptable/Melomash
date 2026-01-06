@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Settings, Sparkle, HardDrive } from "lucide-react";
-import {
-  useTheme,
-  themes,
-  getAccentColorClass,
-  getAccentColorValue,
-} from "./context/ThemeContext";
+import { Settings, HardDrive, ChevronRight } from "lucide-react";
+import { useTheme, themes, getAccentColorValue } from "./context/ThemeContext";
+import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
 import Snowflakes from "./components/Snowflakes";
 import LocalPlayer from "./components/LocalPlayer";
@@ -26,16 +22,13 @@ type Service = {
 const SimpleIcon = ({
   icon,
   size = 24,
-  className = "",
   color,
 }: {
   icon: any;
   size?: number;
-  className?: string;
   color?: string;
 }) => (
   <div
-    className={className}
     style={{
       width: `${size}px`,
       height: `${size}px`,
@@ -52,21 +45,16 @@ const SimpleIcon = ({
   />
 );
 
-const SERVICES: Service[] = [
+const CHROME_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
+const ALL_SERVICES_DATA: Service[] = [
   {
     id: "youtube",
     name: "YouTube Music",
     url: "https://music.youtube.com",
     icon: siYoutubemusic,
     iconType: "simple",
-    type: "web",
-  },
-  {
-    id: "yandex",
-    name: "Яндекс Музыка",
-    url: "https://music.yandex.ru",
-    icon: Sparkle,
-    iconType: "lucide",
     type: "web",
   },
   {
@@ -80,7 +68,7 @@ const SERVICES: Service[] = [
   {
     id: "vk",
     name: "VK Музыка",
-    url: "https://vk.com/audio",
+    url: "https://vk.com/music",
     icon: siVk,
     iconType: "simple",
     type: "web",
@@ -88,90 +76,82 @@ const SERVICES: Service[] = [
   {
     id: "soundcloud",
     name: "SoundCloud",
-    url: "https://soundcloud.com/discover",
+    url: "https://soundcloud.com",
     icon: siSoundcloud,
     iconType: "simple",
     type: "web",
   },
   {
     id: "local",
-    name: "Локальный диск",
+    name: "Локальные файлы",
     icon: HardDrive,
     iconType: "lucide",
     type: "local",
   },
 ];
 
-const CHROME_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-
-const COSMETIC_AD_BLOCK_CSS = `
-  iframe[src*="googleads"],
-  div[id*="ad-unit"],
-  div[class*="advertising"],
-  ins.adsbygoogle { display: none !important; }
-`;
-
 const App: React.FC = () => {
-  const [activeId, setActiveId] = useState("youtube");
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const { theme, snowflakesEnabled, accentColor } = useTheme();
-  const currentTheme = themes[theme];
+  const { enabledServices } = useServices();
 
-  const webviewRefs = useRef<{ [key: string]: any }>({});
+  const currentTheme = themes[theme];
+  const accentHex = getAccentColorValue(accentColor, theme);
+
+  const visibleServices = ALL_SERVICES_DATA.filter((s) =>
+    enabledServices.includes(s.id),
+  );
+
+  const [activeId, setActiveId] = useState<string>(
+    () => visibleServices[0]?.id || "youtube",
+  );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const webviewRefs = useRef<Record<string, any>>({});
 
   useEffect(() => {
-    const applyAdBlock = (id: string) => {
-      const webview = webviewRefs.current[id];
-      if (webview) {
-        const handleDomReady = () => {
-          webview.insertCSS(COSMETIC_AD_BLOCK_CSS);
-        };
-        webview.addEventListener("dom-ready", handleDomReady);
-        return () => webview.removeEventListener("dom-ready", handleDomReady);
-      }
-    };
-
-    SERVICES.forEach((s) => {
-      if (s.type === "web" && s.id) applyAdBlock(s.id);
-    });
-  }, []);
+    if (!enabledServices.includes(activeId) && visibleServices.length > 0) {
+      setActiveId(visibleServices[0].id);
+    }
+  }, [enabledServices, activeId, visibleServices]);
 
   return (
     <div
-      className="flex h-screen w-screen overflow-hidden font-sans select-none"
-      style={{ backgroundColor: currentTheme.bg }}
+      className="flex h-screen w-full overflow-hidden font-sans select-none"
+      style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
     >
       <Snowflakes enabled={snowflakesEnabled} />
 
       <aside
-        onMouseEnter={() => setIsSidebarExpanded(true)}
-        onMouseLeave={() => setIsSidebarExpanded(false)}
-        className={`flex flex-col items-start py-6 z-50 fixed left-0 top-0 bottom-0 border-r transition-all duration-300 ease-in-out px-4 ${
-          isSidebarExpanded ? "w-64" : "w-20"
-        }`}
+        className="group fixed left-0 top-0 h-full z-[60] w-20 hover:w-64 transition-all duration-300 ease-in-out border-r flex flex-col items-center py-6 shadow-2xl overflow-hidden"
         style={{
           backgroundColor: currentTheme.sidebar,
           borderColor: currentTheme.border,
         }}
       >
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center mb-10 shadow-lg shrink-0 self-center transition-transform duration-300"
+          className="mb-10 p-3 rounded-2xl shadow-lg shrink-0 transition-all duration-300 group-hover:w-[calc(100%-2rem)] flex items-center justify-center group-hover:justify-start group-hover:px-4"
           style={{ backgroundColor: currentTheme.logoBg }}
         >
-          <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-8 h-8 object-contain shrink-0"
+          />
+          <span className="ml-4 font-bold text-lg tracking-tight truncate hidden group-hover:block transition-all">
+            Melomash
+          </span>
         </div>
 
-        <nav className="flex flex-col gap-3 flex-1 w-full overflow-hidden mt-4">
-          {SERVICES.map((s) => {
+        <nav className="flex-1 w-full flex flex-col gap-2 px-3 overflow-y-auto no-scrollbar">
+          {visibleServices.map((s) => {
             const isActive = activeId === s.id;
             return (
               <button
                 key={s.id}
                 onClick={() => setActiveId(s.id)}
-                className={`flex items-center gap-4 p-3 rounded-2xl transition-all duration-300 w-full relative ${
-                  isActive ? "bg-white/10" : "hover:bg-white/5"
+                className={`w-full flex items-center rounded-2xl transition-all duration-200 group/btn relative min-h-[56px] ${
+                  isActive
+                    ? ""
+                    : "hover:bg-white/5 opacity-50 hover:opacity-100"
                 }`}
                 style={{
                   backgroundColor: isActive
@@ -179,74 +159,56 @@ const App: React.FC = () => {
                     : "transparent",
                 }}
               >
-                <div className="shrink-0">
+                {isActive && (
+                  <div
+                    className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full"
+                    style={{ backgroundColor: accentHex }}
+                  />
+                )}
+
+                <div className="w-14 flex items-center justify-center shrink-0">
                   {s.iconType === "simple" ? (
                     <SimpleIcon
                       icon={s.icon}
-                      size={24}
-                      color={
-                        isActive
-                          ? getAccentColorValue(accentColor, theme)
-                          : "#6b7280"
-                      }
+                      size={20}
+                      color={isActive ? accentHex : currentTheme.text}
                     />
                   ) : (
                     <s.icon
-                      size={24}
-                      className={
-                        isActive
-                          ? getAccentColorClass(accentColor, theme)
-                          : "text-gray-500"
-                      }
+                      size={20}
+                      style={{
+                        color: isActive ? accentHex : currentTheme.text,
+                      }}
                     />
                   )}
                 </div>
+
                 <span
-                  className={`font-medium text-sm whitespace-nowrap transition-all duration-300 ${
-                    isSidebarExpanded
-                      ? "opacity-100 translate-x-0"
-                      : "opacity-0 -translate-x-4 pointer-events-none"
-                  }`}
-                  style={{
-                    color: isActive
-                      ? currentTheme.text
-                      : currentTheme.textSecondary,
-                  }}
+                  className={`text-sm font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1 ${isActive ? "text-white" : "opacity-80"}`}
                 >
                   {s.name}
                 </span>
+
+                {isActive && (
+                  <ChevronRight
+                    size={14}
+                    className="ml-auto mr-4 opacity-40 hidden group-hover:block"
+                  />
+                )}
               </button>
             );
           })}
         </nav>
 
-        <div
-          className="w-full flex flex-col gap-3 pt-4 border-t"
-          style={{ borderColor: currentTheme.border }}
-        >
+        <div className="w-full px-3 mt-auto pt-4">
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center gap-4 p-3 rounded-2xl group transition-all w-full overflow-hidden hover:bg-white/5"
-            style={{
-              backgroundColor: isSettingsOpen
-                ? currentTheme.active
-                : "transparent",
-            }}
+            className="w-full flex items-center min-h-[56px] rounded-2xl opacity-40 hover:opacity-100 hover:bg-white/5 transition-all"
           >
-            <div className="shrink-0">
-              <Settings
-                size={24}
-                className={`text-gray-500 transition-transform duration-500 ${isSettingsOpen ? "rotate-90" : "group-hover:rotate-45"}`}
-              />
+            <div className="w-14 flex items-center justify-center shrink-0">
+              <Settings size={20} />
             </div>
-            <span
-              className={`font-medium text-sm whitespace-nowrap transition-all duration-300 ${
-                isSidebarExpanded
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-4 pointer-events-none"
-              }`}
-              style={{ color: currentTheme.textSecondary }}
-            >
+            <span className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1">
               Настройки
             </span>
           </button>
@@ -257,7 +219,7 @@ const App: React.FC = () => {
         className="flex-1 ml-20 h-full relative"
         style={{ backgroundColor: currentTheme.main }}
       >
-        {SERVICES.map((s) => (
+        {ALL_SERVICES_DATA.map((s) => (
           <div
             key={s.id}
             className={`absolute inset-0 transition-opacity duration-500 ${
@@ -266,25 +228,31 @@ const App: React.FC = () => {
                 : "opacity-0 z-0 pointer-events-none"
             }`}
           >
-            {s.type === "local" ? (
-              <LocalPlayer />
-            ) : (
-              <webview
-                ref={(el) => {
-                  if (el) webviewRefs.current[s.id] = el;
-                }}
-                src={s.url}
-                partition="persist:music_session"
-                className="w-full h-full"
-                useragent={CHROME_USER_AGENT}
-                allowpopups={true}
-                // @ts-ignore
-                webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=true, webSecurity=false, plugins=true"
-              />
-            )}
+            {enabledServices.includes(s.id) &&
+              (s.type === "local" ? (
+                <LocalPlayer />
+              ) : (
+                <webview
+                  ref={(el) => {
+                    if (el) webviewRefs.current[s.id] = el;
+                  }}
+                  src={s.url}
+                  partition="persist:music_session"
+                  className="w-full h-full"
+                  useragent={CHROME_USER_AGENT}
+                  allowpopups={true}
+                  // @ts-ignore
+                  webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=true, webSecurity=false, plugins=true"
+                />
+              ))}
           </div>
         ))}
       </main>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
 
       <style>{`
         webview {
@@ -294,12 +262,9 @@ const App: React.FC = () => {
           background: ${currentTheme.main};
         }
         webview:focus { outline: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
     </div>
   );
 };
