@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Youtube, Music, Disc, MessageCircle, Settings } from "lucide-react";
-import { useTheme, themes, getAccentColorClass } from "./ThemeContext";
+import { Youtube, Music, Disc, MessageCircle, Cog } from "lucide-react";
+import { useTheme, themes, getAccentColorClass, getAccentColorValue } from "./ThemeContext";
 import SettingsModal from "./SettingsModal";
 import Snowflakes from "./Snowflakes";
 
@@ -230,17 +230,22 @@ const App: React.FC = () => {
         </nav>
 
         <div
-          className="p-4 border-t"
+          className={`border-t ${isExpanded ? "p-4" : "p-3 flex justify-center"}`}
           style={{ borderColor: currentTheme.border }}
         >
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="w-full flex items-center p-3 rounded-xl transition-all hover:opacity-80"
-            style={{ backgroundColor: currentTheme.hover }}
+            className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 group`}
+            style={{
+              backgroundColor: "transparent",
+            }}
           >
-            <Settings size={24} style={{ color: currentTheme.textSecondary }} />
+            <Cog
+              className={`${getAccentColorClass(accentColor, theme)} shrink-0`}
+              size={24}
+            />
             <span
-              className={`ml-4 font-medium transition-opacity duration-300 ${
+              className={`ml-4 font-medium truncate transition-opacity duration-300 ${
                 isExpanded ? "opacity-100" : "opacity-0"
               }`}
             >
