@@ -9,7 +9,7 @@ import {
 import SettingsModal from "./components/SettingsModal";
 import Snowflakes from "./components/Snowflakes";
 import LocalPlayer from "./components/LocalPlayer";
-import { siVk, siSpotify, siYoutubemusic } from "simple-icons";
+import { siVk, siSpotify, siYoutubemusic, siSoundcloud } from "simple-icons";
 
 //@ts-ignore
 import logo from "./assets/icon.png";
@@ -82,6 +82,14 @@ const SERVICES: Service[] = [
     name: "VK Музыка",
     url: "https://vk.com/audio",
     icon: siVk,
+    iconType: "simple",
+    type: "web",
+  },
+  {
+    id: "soundcloud",
+    name: "SoundCloud",
+    url: "https://soundcloud.com/discover",
+    icon: siSoundcloud,
     iconType: "simple",
     type: "web",
   },
