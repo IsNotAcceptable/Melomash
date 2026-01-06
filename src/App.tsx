@@ -37,6 +37,55 @@ const SERVICES = [
 const CHROME_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
+const COSMETIC_AD_BLOCK_CSS = `
+  iframe[src*="googleads"],
+  div[id*="ad-unit"],
+  div[class*="advertising"],
+  ins.adsbygoogle { display: none !important; height: 0 !important; width: 0 !important; }
+
+  .d-main-layout__column_right,
+  aside.d-main-layout__column_right,
+  .deco-ads-wrapper,
+  .bar-below-ads,
+  [class*="Ad-module"],
+  [class*="Ads-module"],
+  .d-main-layout__column_right_is-hidden {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
+  }
+
+  .d-main-layout__main {
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  .d-main-layout__column_center {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .page-root .page-root__main,
+  .centerblock-wrapper,
+  .page-index__main,
+  .page-artist__main,
+  .page-playlist__main {
+    max-width: none !important;
+    margin-right: 0 !important;
+    padding-right: 30px !important;
+    width: 100% !important;
+  }
+
+  .d-track_ads, .ads-block { display: none !important; }
+`;
+
 const App: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeId, setActiveId] = useState("youtube");
@@ -44,20 +93,51 @@ const App: React.FC = () => {
 
   const { theme, snowflakesEnabled, accentColor } = useTheme();
   const currentTheme = themes[theme];
-
   const webviewRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
-    const currentWebview = webviewRefs.current[activeId];
-    if (currentWebview) {
-      const handleAudioActivation = () => {
-        try {
-          if (currentWebview.isAudioMuted()) {
-            currentWebview.setAudioMuted(false);
-          }
-        } catch (e) {}
+    const applyInjects = (id: string) => {
+      const wv = webviewRefs.current[id];
+      if (!wv) return;
 
-        currentWebview.executeJavaScript(`
+      const onDomReady = () => {
+        wv.insertCSS(COSMETIC_AD_BLOCK_CSS);
+
+        if (id === "yandex") {
+          wv.executeJavaScript(`
+            (function() {
+              const cleanYandex = () => {
+                const targets = [
+                  '.d-main-layout__column_right',
+                  '.deco-ads-wrapper',
+                  '.bar-below-ads',
+                  'aside.d-main-layout__column_right'
+                ];
+
+                targets.forEach(sel => {
+                  const el = document.querySelector(sel);
+                  if (el) el.remove();
+                });
+
+                const main = document.querySelector('.d-main-layout__main');
+                if (main) {
+                  main.style.setProperty('margin-right', '0', 'important');
+                  main.style.setProperty('width', '100%', 'important');
+                  main.style.setProperty('max-width', '100%', 'important');
+                }
+              };
+
+              const observer = new MutationObserver(cleanYandex);
+              observer.observe(document.body, { childList: true, subtree: true });
+
+              cleanYandex();
+              setTimeout(cleanYandex, 2000);
+              setTimeout(cleanYandex, 5000);
+            })();
+          `);
+        }
+
+        wv.executeJavaScript(`
           (function() {
             const resume = () => {
               const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -66,52 +146,41 @@ const App: React.FC = () => {
                 if (ctx.state === 'suspended') ctx.resume();
               }
             };
-
             document.body.click();
-            const spaceEvent = new KeyboardEvent('keydown', {
-              key: ' ', code: 'Space', keyCode: 32, which: 32, bubbles: true
-            });
-            document.dispatchEvent(spaceEvent);
-
             resume();
-            console.log('Audio Context resumed');
           })();
         `);
-
-        currentWebview.focus();
       };
 
-      currentWebview.addEventListener("dom-ready", handleAudioActivation);
-      const timeout = setTimeout(handleAudioActivation, 2000);
+      wv.addEventListener("dom-ready", onDomReady);
+      return () => wv.removeEventListener("dom-ready", onDomReady);
+    };
 
-      return () => {
-        currentWebview.removeEventListener("dom-ready", handleAudioActivation);
-        clearTimeout(timeout);
-      };
-    }
-  }, [activeId]);
-  
+    SERVICES.forEach((s) => applyInjects(s.id));
+  }, []);
+
   return (
     <div
-      className="relative flex h-screen w-screen overflow-hidden select-none font-sans"
+      className="relative flex h-screen w-screen overflow-hidden select-none font-sans transition-colors duration-300"
       style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
     >
+      <Snowflakes enabled={snowflakesEnabled} />
+
       <aside
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
-        className={`
-          absolute left-0 top-0 h-full z-50 flex flex-col transition-[width] duration-300 ease-in-out
-          ${isExpanded ? "w-[260px] shadow-[20px_0_50px_rgba(0,0,0,0.8)]" : "w-20"}
-        `}
+        className="absolute left-0 top-0 h-full z-50 border-r transition-[width] duration-300 ease-in-out flex flex-col"
         style={{
+          width: isExpanded ? "260px" : "80px",
           backgroundColor: currentTheme.sidebar,
-          borderRight: `1px solid ${currentTheme.border}`
+          borderColor: currentTheme.border,
+          boxShadow: isExpanded ? "10px 0 30px rgba(0,0,0,0.2)" : "none",
         }}
       >
-        <div className="h-[80px] flex items-center px-6 shrink-0 overflow-hidden">
-          <div className="flex items-center gap-3 font-bold">
+        <div className="h-[80px] flex items-center px-5 shrink-0 overflow-hidden">
+          <div className="flex items-center gap-4">
             <div
-              className="w-10 h-10 flex items-center justify-center shrink-0 rounded-lg overflow-hidden"
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
               style={{ backgroundColor: currentTheme.logoBg }}
             >
               <img
@@ -119,24 +188,18 @@ const App: React.FC = () => {
                 alt="Logo"
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  const target = e.currentTarget;
-                  target.style.display = "none";
-                  const parent = target.parentElement;
-                  if (parent && !parent.querySelector(".fallback")) {
-                    const el = document.createElement("div");
-                    el.className =
-                      "fallback w-full h-full bg-indigo-600 flex items-center justify-center text-[10px] text-white";
-                    el.innerText = "MLM";
-                    parent.appendChild(el);
-                  }
+                  (e.currentTarget as HTMLImageElement).src =
+                    "https://img.icons8.com/fluency/48/music.png";
                 }}
               />
             </div>
-            {isExpanded && (
-              <span className="text-xl tracking-tighter opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                Melomash
-              </span>
-            )}
+            <span
+              className={`text-xl font-bold tracking-tight transition-opacity duration-300 whitespace-nowrap ${
+                isExpanded ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              Melomash
+            </span>
           </div>
         </div>
 
@@ -145,61 +208,44 @@ const App: React.FC = () => {
             <button
               key={s.id}
               onClick={() => setActiveId(s.id)}
-              className={`
-                w-full flex items-center p-3 rounded-xl transition-all duration-200
-              `}
+              className="w-full flex items-center p-3 rounded-xl transition-all duration-200 group"
               style={{
-                backgroundColor: activeId === s.id ? currentTheme.active : 'transparent',
-                color: activeId === s.id ? currentTheme.text : currentTheme.textSecondary,
-              }}
-              onMouseEnter={(e) => {
-                if (activeId !== s.id) {
-                  e.currentTarget.style.backgroundColor = currentTheme.hover;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeId !== s.id) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
+                backgroundColor:
+                  activeId === s.id ? currentTheme.active : "transparent",
               }}
             >
               <s.icon
                 className={`${getAccentColorClass(accentColor, theme)} shrink-0 ${activeId === s.id ? "scale-110" : ""}`}
                 size={24}
               />
-              {isExpanded && (
-                <span className="ml-4 font-medium truncate animate-in fade-in duration-300">
-                  {s.name}
-                </span>
-              )}
+              <span
+                className={`ml-4 font-medium truncate transition-opacity duration-300 ${
+                  isExpanded ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {s.name}
+              </span>
             </button>
           ))}
         </nav>
 
         <div
-          className="p-4 mt-auto"
-          style={{ borderTop: `1px solid ${currentTheme.border}` }}
+          className="p-4 border-t"
+          style={{ borderColor: currentTheme.border }}
         >
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="w-full flex items-center p-3 rounded-xl transition-all"
-            style={{
-              color: currentTheme.textSecondary,
-              backgroundColor: 'transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = currentTheme.hover;
-              e.currentTarget.style.color = currentTheme.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = currentTheme.textSecondary;
-            }}
+            className="w-full flex items-center p-3 rounded-xl transition-all hover:opacity-80"
+            style={{ backgroundColor: currentTheme.hover }}
           >
-            <Settings size={24} />
-            {isExpanded && (
-              <span className="ml-4 font-medium truncate">Настройки</span>
-            )}
+            <Settings size={24} style={{ color: currentTheme.textSecondary }} />
+            <span
+              className={`ml-4 font-medium transition-opacity duration-300 ${
+                isExpanded ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              Настройки
+            </span>
           </button>
         </div>
       </aside>
@@ -248,8 +294,6 @@ const App: React.FC = () => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
-
-      <Snowflakes enabled={snowflakesEnabled} />
     </div>
   );
 };

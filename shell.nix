@@ -6,6 +6,8 @@ pkgs.mkShell {
     nodePackages.npm
     git
     electron
+    wineWowPackages.stable
+    mono
   ];
 
   LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [
@@ -50,6 +52,8 @@ pkgs.mkShell {
   shellHook = ''
     export ELECTRON_OVERRIDE_DIST_PATH="${pkgs.electron}/bin/electron"
     export PATH="${pkgs.electron}/bin:$PATH"
+
+    export WINEDEBUG=-all
 
     export ELECTRON_FLAGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu-sandbox"
 

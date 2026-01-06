@@ -1,6 +1,6 @@
 {
   "name": "melomash",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "main": "./out/main/index.js",
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "build:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "dev.isnotacceptable.app",
+    "appId": "dev.isnotacceptable.melomash",
     "productName": "Melomash",
     "directories": {
       "output": "dist"
@@ -38,6 +38,8 @@
     "vite": "^5.2.11"
   },
   "dependencies": {
+    "@cliqz/adblocker-electron": "^1.34.0",
+    "node-fetch": "^3.3.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   }

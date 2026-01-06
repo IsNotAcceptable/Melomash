@@ -9,6 +9,25 @@ let mainWindow: BrowserWindow | null = null;
 const CHROME_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
+const AD_BLOCK_PATTERNS = [
+  "*://*.doubleclick.net/*",
+  "*://*.google-analytics.com/*",
+  "*://*.googlesyndication.com/*",
+  "*://*.googleadservices.com/*",
+  "*://*.moatads.com/*",
+  "*://*.amazon-adsystem.com/*",
+  "*://*.ad-delivery.net/*",
+  "*://*.yandex.ru/ads/*",
+  "*://*.an.yandex.ru/*",
+  "*://*.static.doubleclick.net/*",
+  "*://adservice.google.com/*",
+  "*://adservice.google.ru/*",
+  "*://*.youtube.com/api/stats/ads*",
+  "*://*.youtube.com/pagead/*",
+  "*://*.youtube.com/ptracking/*",
+  "*://*.vk.com/ads_rotate.php*",
+];
+
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch(
   "disable-features",
@@ -21,6 +40,17 @@ app.commandLine.appendSwitch("force-color-profile", "srgb");
 async function createWindow() {
   const musicSession = session.fromPartition("persist:music_session");
   musicSession.setUserAgent(CHROME_USER_AGENT);
+
+  try {
+    musicSession.webRequest.onBeforeRequest(
+      { urls: AD_BLOCK_PATTERNS },
+      (details, callback) => {
+        callback({ cancel: true });
+      },
+    );
+  } catch (error) {
+    console.error("Ошибка инициализации блокировщика рекламы:", error);
+  }
 
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -55,14 +85,14 @@ async function createWindow() {
       }
     });
   }
-
-  mainWindow.on("closed", () => {
-    mainWindow = null;
-  });
 }
 
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
