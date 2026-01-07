@@ -5,7 +5,7 @@ import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
 import Snowflakes from "./components/Snowflakes";
 import LocalPlayer from "./components/LocalPlayer";
-import { siVk, siSpotify, siYoutubemusic, siSoundcloud } from "simple-icons";
+import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siApplemusic } from "simple-icons";
 
 //@ts-ignore
 import logo from "./assets/icon.png";
@@ -83,6 +83,14 @@ const ALL_SERVICES_DATA: Service[] = [
     name: "SoundCloud",
     url: "https://soundcloud.com",
     icon: siSoundcloud,
+    iconType: "simple",
+    type: "web",
+  },
+  {
+    id: "applemusic",
+    name: "Apple Music",
+    url: "https://music.apple.com",
+    icon: siApplemusic,
     iconType: "simple",
     type: "web",
   },
