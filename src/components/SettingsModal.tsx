@@ -8,13 +8,46 @@ import {
   LayoutGrid,
   Check,
   Pipette,
+  HardDrive,
+  Sparkle,
 } from "lucide-react";
+import { siVk, siSpotify, siYoutubemusic, siSoundcloud } from "simple-icons";
 import {
   useTheme,
   themes,
   getAccentColorValue,
 } from "./../context/ThemeContext";
 import { useServices, ALL_SERVICE_IDS } from "./../context/ServicesContext";
+
+// Компонент для simple-icons
+const SimpleIcon = ({
+  icon,
+  size = 24,
+  className = "",
+  color
+}: {
+  icon: any;
+  size?: number;
+  className?: string;
+  color?: string;
+}) => (
+  <div
+    className={`${className}`}
+    style={{
+      width: `${size}px`,
+      height: `${size}px`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+    dangerouslySetInnerHTML={{
+      __html: icon.svg.replace(
+        "<svg",
+        `<svg fill="${color || "currentColor"}"`,
+      ),
+    }}
+  />
+);
 
 type AccentColor =
   | "blue"
@@ -76,6 +109,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     vk: "VK Музыка",
     soundcloud: "SoundCloud",
     local: "Локальные файлы",
+  };
+
+  const serviceIcons: Record<string, { icon: any; iconType: "simple" | "lucide" }> = {
+    youtube: { icon: siYoutubemusic, iconType: "simple" },
+    yandex: { icon: Sparkle, iconType: "lucide" },
+    spotify: { icon: siSpotify, iconType: "simple" },
+    vk: { icon: siVk, iconType: "simple" },
+    soundcloud: { icon: siSoundcloud, iconType: "simple" },
+    local: { icon: HardDrive, iconType: "lucide" },
   };
 
   return (
@@ -254,38 +296,55 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   Сервисы в сайдбаре
                 </h3>
               </div>
-              <div className="grid gap-3">
+              <div className="grid gap-4">
                 {ALL_SERVICE_IDS.map((id) => (
-                  <button
+                  <div
                     key={id}
-                    onClick={() => toggleService(id)}
-                    className="w-full p-4 rounded-2xl flex items-center justify-between transition-all border border-white/5 hover:bg-white/5 active:scale-[0.98]"
+                    className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5"
                   >
-                    <span
-                      className={`font-semibold text-sm transition-opacity ${enabledServices.includes(id) ? "opacity-100" : "opacity-30"}`}
-                    >
-                      {serviceLabels[id]}
-                    </span>
-                    <div
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all ${enabledServices.includes(id) ? "scale-100 shadow-md" : "scale-90 opacity-20"}`}
-                      style={{
-                        backgroundColor: enabledServices.includes(id)
-                          ? accentHex
-                          : "transparent",
-                        border: !enabledServices.includes(id)
-                          ? `2px solid ${currentTheme.text}`
-                          : "none",
-                      }}
-                    >
-                      {enabledServices.includes(id) && (
-                        <Check
-                          size={16}
-                          className="text-white"
-                          strokeWidth={3}
-                        />
-                      )}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-white/10">
+                          {serviceIcons[id].iconType === "simple" ? (
+                            <SimpleIcon
+                              icon={serviceIcons[id].icon}
+                              size={16}
+                              color={currentTheme.text}
+                            />
+                          ) : (
+                            React.createElement(serviceIcons[id].icon, {
+                              size: 16,
+                              className: "opacity-80",
+                              style: { color: currentTheme.text }
+                            })
+                          )}
+                        </div>
+                        <h3 className="font-bold text-sm">{serviceLabels[id]}</h3>
+                      </div>
+                      <p className="text-xs opacity-50">
+                        {id === "local" ? "Музыка с вашего устройства" :
+                         id === "youtube" ? "Онлайн музыкальная платформа" :
+                         id === "spotify" ? "Популярный стриминговый сервис" :
+                         id === "yandex" ? "Российская музыкальная платформа" :
+                         id === "vk" ? "Социальная сеть с музыкой" :
+                         "Онлайн музыкальная платформа"}
+                      </p>
                     </div>
-                  </button>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={enabledServices.includes(id)}
+                        onChange={() => toggleService(id)}
+                      />
+                      <div
+                        className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                        style={{
+                          backgroundColor: enabledServices.includes(id) ? accentHex : "",
+                        }}
+                      ></div>
+                    </label>
+                  </div>
                 ))}
               </div>
               <div className="p-4 bg-white/5 rounded-2xl text-center">
