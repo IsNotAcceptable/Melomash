@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Settings, HardDrive, ChevronRight } from "lucide-react";
+import { Settings, HardDrive, ChevronRight, Sparkle } from "lucide-react";
 import { useTheme, themes, getAccentColorValue } from "./context/ThemeContext";
 import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
@@ -45,9 +45,6 @@ const SimpleIcon = ({
   />
 );
 
-const CHROME_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-
 const ALL_SERVICES_DATA: Service[] = [
   {
     id: "youtube",
@@ -55,6 +52,14 @@ const ALL_SERVICES_DATA: Service[] = [
     url: "https://music.youtube.com",
     icon: siYoutubemusic,
     iconType: "simple",
+    type: "web",
+  },
+  {
+    id: "yandex",
+    name: "Яндекс Музыка",
+    url: "https://music.yandex.ru",
+    icon: Sparkle,
+    iconType: "lucide",
     type: "web",
   },
   {
@@ -68,7 +73,7 @@ const ALL_SERVICES_DATA: Service[] = [
   {
     id: "vk",
     name: "VK Музыка",
-    url: "https://vk.com/music",
+    url: "https://vkmusic.in",
     icon: siVk,
     iconType: "simple",
     type: "web",
@@ -239,10 +244,9 @@ const App: React.FC = () => {
                   src={s.url}
                   partition="persist:music_session"
                   className="w-full h-full"
-                  useragent={CHROME_USER_AGENT}
                   allowpopups={true}
                   // @ts-ignore
-                  webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=true, webSecurity=false, plugins=true"
+                  webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=false"
                 />
               ))}
           </div>
