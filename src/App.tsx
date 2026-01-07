@@ -5,7 +5,7 @@ import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
 import Snowflakes from "./components/Snowflakes";
 import LocalPlayer from "./components/LocalPlayer";
-import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siLastdotfm } from "simple-icons";
+import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siApplemusic } from "simple-icons";
 
 //@ts-ignore
 import logo from "./assets/icon.png";
@@ -87,10 +87,10 @@ const ALL_SERVICES_DATA: Service[] = [
     type: "web",
   },
   {
-    id: "lastfm",
-    name: "Last.fm",
-    url: "https://last.fm",
-    icon: siLastdotfm,
+    id: "applemusic",
+    name: "Apple Music",
+    url: "https://music.apple.com",
+    icon: siApplemusic,
     iconType: "simple",
     type: "web",
   },

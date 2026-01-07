@@ -11,7 +11,7 @@ import {
   HardDrive,
   Sparkle,
 } from "lucide-react";
-import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siLastdotfm } from "simple-icons";
+import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siApplemusic } from "simple-icons";
 import {
   useTheme,
   themes,
@@ -108,7 +108,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     spotify: "Spotify",
     vk: "VK Музыка",
     soundcloud: "SoundCloud",
-    lastfm: "Last.fm",
+    applemusic: "Apple Music",
     local: "Локальные файлы",
   };
 
@@ -118,7 +118,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     spotify: { icon: siSpotify, iconType: "simple" },
     vk: { icon: siVk, iconType: "simple" },
     soundcloud: { icon: siSoundcloud, iconType: "simple" },
-    lastfm: { icon: siLastdotfm, iconType: "simple" },
+    applemusic: { icon: siApplemusic, iconType: "simple" },
     local: { icon: HardDrive, iconType: "lucide" },
   };
 
@@ -330,7 +330,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                          id === "yandex" ? "Российская музыкальная платформа" :
                          id === "vk" ? "Социальная сеть с музыкой" :
                          id === "soundcloud" ? "Онлайн музыкальная платформа" :
-                         id === "lastfm" ? "Социальная сеть для музыкантов" :
+                         id === "applemusic" ? "Премиум музыкальный сервис" :
                          "Онлайн музыкальная платформа"}
                       </p>
                     </div>

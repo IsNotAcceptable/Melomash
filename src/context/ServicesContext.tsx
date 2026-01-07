@@ -6,7 +6,7 @@ export const ALL_SERVICE_IDS = [
   "spotify",
   "vk",
   "soundcloud",
-  "lastfm",
+  "applemusic",
   "local",
 ];
 
