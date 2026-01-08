@@ -164,6 +164,18 @@ const App: React.FC = () => {
         `);
       }
 
+      if (serviceId === 'yandex') {
+        // Убираем оставшийся прямоугольник под рекламу на Яндекс Музыке
+        injectCSS(`
+          html body.ym-font-music.ym-dark-theme div.WithTopBanner_root__P__x3 div.WithTopBanner_content__6Vh7a div.CommonLayout_root__WC_W1.DefaultLayout_root__7J0wo div.Content_rootOld__g85_m.CommonLayout_content__zy_Ja section.SideAdvertBanner_root__hT1jJ.Content_sideBanner__Na07D {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+        `);
+      }
+
       // Общие правила для всех сервисов
       injectCSS(`
         /* Дополнительная блокировка рекламы */
