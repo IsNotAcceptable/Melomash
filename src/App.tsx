@@ -127,6 +127,70 @@ const App: React.FC = () => {
     }
   }, [enabledServices, activeId, visibleServices]);
 
+  // Обработка загрузки webview и инъекция CSS
+  useEffect(() => {
+    const handleWebviewLoad = (webview: any, serviceId: string) => {
+      if (!webview) return;
+
+      const injectCSS = (css: string) => {
+        try {
+          if (webview.insertCSS) {
+            webview.insertCSS(css);
+          } else if (webview.executeJavaScript) {
+            webview.executeJavaScript(`
+              (function() {
+                const style = document.createElement('style');
+                style.textContent = \`${css}\`;
+                style.setAttribute('data-melomash-block', 'true');
+                document.head.appendChild(style);
+              })();
+            `).catch(() => {});
+          }
+        } catch (error) {
+          console.error('CSS injection error:', error);
+        }
+      };
+
+      // Специфические правила для разных сервисов
+      if (serviceId === 'vk') {
+        // Убираем навязчивое всплывающее окно VK Музыки
+        injectCSS(`
+          html body div.ee02ee8c1b_popup {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+        `);
+      }
+
+      // Общие правила для всех сервисов
+      injectCSS(`
+        /* Дополнительная блокировка рекламы */
+        .ad, .ads, .advertisement, .banner {
+          display: none !important;
+        }
+      `);
+    };
+
+    // Добавляем обработчики для всех webview
+    Object.entries(webviewRefs.current).forEach(([serviceId, webview]) => {
+      if (webview && !webview._melomashHandled) {
+        webview._melomashHandled = true;
+
+        // Обработчик dom-ready
+        webview.addEventListener('dom-ready', () => {
+          handleWebviewLoad(webview, serviceId);
+        });
+
+        // Если страница уже загружена
+        if (webview.getURL && webview.getURL()) {
+          handleWebviewLoad(webview, serviceId);
+        }
+      }
+    });
+  }, [enabledServices]); // Зависимость от enabledServices чтобы обновлять при изменении
+
   return (
     <div
       className="flex h-screen w-full overflow-hidden font-sans select-none"
