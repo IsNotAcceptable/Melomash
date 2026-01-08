@@ -56,3 +56,4 @@ const Snowflakes: React.FC<SnowflakesProps> = ({ enabled }) => {
 };
 
 export default Snowflakes;
+

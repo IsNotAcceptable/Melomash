@@ -4,6 +4,7 @@ import { useTheme, themes, getAccentColorValue } from "./context/ThemeContext";
 import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
 import Snowflakes from "./components/Snowflakes";
+import Starfield from "./components/Starfield";
 import LocalPlayer from "./components/LocalPlayer";
 import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siApplemusic } from "simple-icons";
 
@@ -104,7 +105,7 @@ const ALL_SERVICES_DATA: Service[] = [
 ];
 
 const App: React.FC = () => {
-  const { theme, snowflakesEnabled, accentColor } = useTheme();
+  const { theme, snowflakesEnabled, starfieldEnabled, starfieldCount, starfieldSpeed, accentColor } = useTheme();
   const { enabledServices } = useServices();
 
   const currentTheme = themes[theme];
@@ -126,12 +127,93 @@ const App: React.FC = () => {
     }
   }, [enabledServices, activeId, visibleServices]);
 
+  // Обработка загрузки webview и инъекция CSS
+  useEffect(() => {
+    const handleWebviewLoad = (webview: any, serviceId: string) => {
+      if (!webview) return;
+
+      const injectCSS = (css: string) => {
+        try {
+          if (webview.insertCSS) {
+            webview.insertCSS(css);
+          } else if (webview.executeJavaScript) {
+            webview.executeJavaScript(`
+              (function() {
+                const style = document.createElement('style');
+                style.textContent = \`${css}\`;
+                style.setAttribute('data-melomash-block', 'true');
+                document.head.appendChild(style);
+              })();
+            `).catch(() => {});
+          }
+        } catch (error) {
+          console.error('CSS injection error:', error);
+        }
+      };
+
+      // Специфические правила для разных сервисов
+      if (serviceId === 'vk') {
+        // Убираем навязчивое всплывающее окно VK Музыки
+        injectCSS(`
+          html body div.ee02ee8c1b_popup {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+        `);
+      }
+
+      if (serviceId === 'yandex') {
+        // Убираем оставшийся прямоугольник под рекламу на Яндекс Музыке
+        injectCSS(`
+          html body.ym-font-music.ym-dark-theme div.WithTopBanner_root__P__x3 div.WithTopBanner_content__6Vh7a div.CommonLayout_root__WC_W1.DefaultLayout_root__7J0wo div.Content_rootOld__g85_m.CommonLayout_content__zy_Ja section.SideAdvertBanner_root__hT1jJ.Content_sideBanner__Na07D {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+        `);
+      }
+
+      // Общие правила для всех сервисов
+      injectCSS(`
+        /* Дополнительная блокировка рекламы */
+        .ad, .ads, .advertisement, .banner {
+          display: none !important;
+        }
+      `);
+    };
+
+    // Добавляем обработчики для всех webview
+    Object.entries(webviewRefs.current).forEach(([serviceId, webview]) => {
+      if (webview && !webview._melomashHandled) {
+        webview._melomashHandled = true;
+
+        // Обработчик dom-ready
+        webview.addEventListener('dom-ready', () => {
+          handleWebviewLoad(webview, serviceId);
+        });
+
+        // Если страница уже загружена
+        if (webview.getURL && webview.getURL()) {
+          handleWebviewLoad(webview, serviceId);
+        }
+      }
+    });
+  }, [enabledServices]); // Зависимость от enabledServices чтобы обновлять при изменении
+
   return (
     <div
       className="flex h-screen w-full overflow-hidden font-sans select-none"
       style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
     >
       <Snowflakes enabled={snowflakesEnabled} />
+      <Starfield
+        enabled={starfieldEnabled}
+        particleCount={starfieldCount}
+        animationSpeed={starfieldSpeed}
+      />
 
       <aside
         className="group fixed left-0 top-0 h-full z-[60] w-20 hover:w-64 transition-all duration-300 ease-in-out border-r flex flex-col items-center py-6 shadow-2xl overflow-hidden"

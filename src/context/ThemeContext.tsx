@@ -9,6 +9,12 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
   snowflakesEnabled: boolean;
   setSnowflakesEnabled: (enabled: boolean) => void;
+  starfieldEnabled: boolean;
+  setStarfieldEnabled: (enabled: boolean) => void;
+  starfieldCount: number;
+  setStarfieldCount: (count: number) => void;
+  starfieldSpeed: number;
+  setStarfieldSpeed: (speed: number) => void;
   accentColor: AccentColor;
   setAccentColor: (color: AccentColor) => void;
   customColor: string;
@@ -53,6 +59,21 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return saved ? JSON.parse(saved) : false;
   });
 
+  const [starfieldEnabled, setStarfieldEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('starfieldEnabled');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const [starfieldCount, setStarfieldCount] = useState<number>(() => {
+    const saved = localStorage.getItem('starfieldCount');
+    return saved ? parseInt(saved) : 50;
+  });
+
+  const [starfieldSpeed, setStarfieldSpeed] = useState<number>(() => {
+    const saved = localStorage.getItem('starfieldSpeed');
+    return saved ? parseFloat(saved) : 2;
+  });
+
   const [accentColor, setAccentColor] = useState<AccentColor>(() => {
     const saved = localStorage.getItem('accentColor');
     return (saved as AccentColor) || 'auto';
@@ -70,6 +91,18 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     localStorage.setItem('snowflakesEnabled', JSON.stringify(snowflakesEnabled));
   }, [snowflakesEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('starfieldEnabled', JSON.stringify(starfieldEnabled));
+  }, [starfieldEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('starfieldCount', starfieldCount.toString());
+  }, [starfieldCount]);
+
+  useEffect(() => {
+    localStorage.setItem('starfieldSpeed', starfieldSpeed.toString());
+  }, [starfieldSpeed]);
 
   useEffect(() => {
     localStorage.setItem('accentColor', accentColor);
@@ -91,6 +124,18 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setSnowflakesEnabled(enabled);
   };
 
+  const handleSetStarfieldEnabled = (enabled: boolean) => {
+    setStarfieldEnabled(enabled);
+  };
+
+  const handleSetStarfieldCount = (count: number) => {
+    setStarfieldCount(count);
+  };
+
+  const handleSetStarfieldSpeed = (speed: number) => {
+    setStarfieldSpeed(speed);
+  };
+
   const handleSetAccentColor = (color: AccentColor) => {
     setAccentColor(color);
   };
@@ -106,6 +151,12 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setTheme: handleSetTheme,
       snowflakesEnabled,
       setSnowflakesEnabled: handleSetSnowflakesEnabled,
+      starfieldEnabled,
+      setStarfieldEnabled: handleSetStarfieldEnabled,
+      starfieldCount,
+      setStarfieldCount: handleSetStarfieldCount,
+      starfieldSpeed,
+      setStarfieldSpeed: handleSetStarfieldSpeed,
       accentColor,
       setAccentColor: handleSetAccentColor,
       customColor,

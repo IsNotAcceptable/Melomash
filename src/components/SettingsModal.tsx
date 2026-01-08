@@ -71,6 +71,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     setTheme,
     snowflakesEnabled,
     setSnowflakesEnabled,
+    starfieldEnabled,
+    setStarfieldEnabled,
+    starfieldCount,
+    setStarfieldCount,
+    starfieldSpeed,
+    setStarfieldSpeed,
     accentColor,
     setAccentColor,
   } = useTheme();
@@ -80,6 +86,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<"appearance" | "services">(
     "appearance",
   );
+
+  const [showStarfieldSettings, setShowStarfieldSettings] = useState(false);
 
   if (!isOpen) return null;
 
@@ -287,6 +295,89 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                       }}
                     ></div>
                   </label>
+                </div>
+              </section>
+
+              <section className="space-y-4 pt-2">
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 opacity-60"></div>
+                        <h3 className="font-bold text-sm">Звездное небо</h3>
+                      </div>
+                      <p className="text-xs opacity-50">
+                        Анимированные звезды и метеоры на фоне
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {starfieldEnabled && (
+                        <button
+                          onClick={() => setShowStarfieldSettings(!showStarfieldSettings)}
+                          className="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                        >
+                          Настройки
+                        </button>
+                      )}
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={starfieldEnabled}
+                          onChange={(e) => setStarfieldEnabled(e.target.checked)}
+                        />
+                        <div
+                          className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                          style={{
+                            backgroundColor: starfieldEnabled ? accentHex : "",
+                          }}
+                        ></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {starfieldEnabled && showStarfieldSettings && (
+                    <div className="space-y-3 pt-2 border-t border-white/10">
+                      {/* Количество звезд */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full bg-yellow-400 opacity-60"></div>
+                          <span className="text-xs font-medium">Количество звезд</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="range"
+                            min="20"
+                            max="100"
+                            value={starfieldCount}
+                            onChange={(e) => setStarfieldCount(parseInt(e.target.value))}
+                            className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                          <span className="text-xs text-white/60 w-8">{starfieldCount}</span>
+                        </div>
+                      </div>
+
+                      {/* Скорость анимации */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full bg-blue-400 opacity-60 animate-pulse"></div>
+                          <span className="text-xs font-medium">Скорость</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="range"
+                            min="0.5"
+                            max="5"
+                            step="0.1"
+                            value={starfieldSpeed}
+                            onChange={(e) => setStarfieldSpeed(parseFloat(e.target.value))}
+                            className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                          <span className="text-xs text-white/60 w-8">{starfieldSpeed.toFixed(1)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </section>
             </>
