@@ -2,10 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 
 declare global {
   interface Window {
-    electron: {
-      selectFolder: () => Promise<string | undefined>;
-      getAudioFiles: (folderPath: string) => Promise<any[]>;
-    };
+    electron: {};
   }
 }
 
@@ -34,8 +31,4 @@ const maskScript = () => {
 
 maskScript();
 
-contextBridge.exposeInMainWorld("electron", {
-  selectFolder: () => ipcRenderer.invoke("select-folder"),
-  getAudioFiles: (folderPath: string) =>
-    ipcRenderer.invoke("get-audio-files", folderPath),
-});
+contextBridge.exposeInMainWorld("electron", {});
