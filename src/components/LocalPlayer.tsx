@@ -18,7 +18,11 @@ interface Track {
   url: string;
 }
 
-const LocalPlayer: React.FC = () => {
+interface LocalPlayerProps {
+  onPlayingChange?: (isPlaying: boolean) => void;
+}
+
+const LocalPlayer: React.FC<LocalPlayerProps> = ({ onPlayingChange }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme];
 
@@ -28,6 +32,10 @@ const LocalPlayer: React.FC = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    onPlayingChange?.(isPlaying);
+  }, [isPlaying, onPlayingChange]);
   const [volume, setVolume] = useState(
     Number(localStorage.getItem("melomash_volume")) || 0.7,
   );
