@@ -4,6 +4,7 @@ import { useTheme, themes, getAccentColorValue } from "./context/ThemeContext";
 import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
 import Snowflakes from "./components/Snowflakes";
+import Starfield from "./components/Starfield";
 import LocalPlayer from "./components/LocalPlayer";
 import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siApplemusic } from "simple-icons";
 
@@ -104,7 +105,7 @@ const ALL_SERVICES_DATA: Service[] = [
 ];
 
 const App: React.FC = () => {
-  const { theme, snowflakesEnabled, accentColor } = useTheme();
+  const { theme, snowflakesEnabled, starfieldEnabled, accentColor } = useTheme();
   const { enabledServices } = useServices();
 
   const currentTheme = themes[theme];
@@ -132,6 +133,7 @@ const App: React.FC = () => {
       style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
     >
       <Snowflakes enabled={snowflakesEnabled} />
+      <Starfield enabled={starfieldEnabled} />
 
       <aside
         className="group fixed left-0 top-0 h-full z-[60] w-20 hover:w-64 transition-all duration-300 ease-in-out border-r flex flex-col items-center py-6 shadow-2xl overflow-hidden"

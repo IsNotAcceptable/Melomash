@@ -71,6 +71,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     setTheme,
     snowflakesEnabled,
     setSnowflakesEnabled,
+    starfieldEnabled,
+    setStarfieldEnabled,
     accentColor,
     setAccentColor,
   } = useTheme();
@@ -284,6 +286,34 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                       className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
                       style={{
                         backgroundColor: snowflakesEnabled ? accentHex : "",
+                      }}
+                    ></div>
+                  </label>
+                </div>
+              </section>
+
+              <section className="space-y-4 pt-2">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 opacity-60"></div>
+                      <h3 className="font-bold text-sm">Звездное небо</h3>
+                    </div>
+                    <p className="text-xs opacity-50">
+                      Анимированные звезды и метеоры на фоне
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={starfieldEnabled}
+                      onChange={(e) => setStarfieldEnabled(e.target.checked)}
+                    />
+                    <div
+                      className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                      style={{
+                        backgroundColor: starfieldEnabled ? accentHex : "",
                       }}
                     ></div>
                   </label>

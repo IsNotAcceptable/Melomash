@@ -9,6 +9,8 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
   snowflakesEnabled: boolean;
   setSnowflakesEnabled: (enabled: boolean) => void;
+  starfieldEnabled: boolean;
+  setStarfieldEnabled: (enabled: boolean) => void;
   accentColor: AccentColor;
   setAccentColor: (color: AccentColor) => void;
   customColor: string;
@@ -53,6 +55,11 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return saved ? JSON.parse(saved) : false;
   });
 
+  const [starfieldEnabled, setStarfieldEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('starfieldEnabled');
+    return saved ? JSON.parse(saved) : false;
+  });
+
   const [accentColor, setAccentColor] = useState<AccentColor>(() => {
     const saved = localStorage.getItem('accentColor');
     return (saved as AccentColor) || 'auto';
@@ -70,6 +77,10 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     localStorage.setItem('snowflakesEnabled', JSON.stringify(snowflakesEnabled));
   }, [snowflakesEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('starfieldEnabled', JSON.stringify(starfieldEnabled));
+  }, [starfieldEnabled]);
 
   useEffect(() => {
     localStorage.setItem('accentColor', accentColor);
@@ -91,6 +102,10 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setSnowflakesEnabled(enabled);
   };
 
+  const handleSetStarfieldEnabled = (enabled: boolean) => {
+    setStarfieldEnabled(enabled);
+  };
+
   const handleSetAccentColor = (color: AccentColor) => {
     setAccentColor(color);
   };
@@ -106,6 +121,8 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setTheme: handleSetTheme,
       snowflakesEnabled,
       setSnowflakesEnabled: handleSetSnowflakesEnabled,
+      starfieldEnabled,
+      setStarfieldEnabled: handleSetStarfieldEnabled,
       accentColor,
       setAccentColor: handleSetAccentColor,
       customColor,
