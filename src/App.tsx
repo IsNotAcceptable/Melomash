@@ -105,7 +105,7 @@ const ALL_SERVICES_DATA: Service[] = [
 ];
 
 const App: React.FC = () => {
-  const { theme, snowflakesEnabled, starfieldEnabled, accentColor } = useTheme();
+  const { theme, snowflakesEnabled, starfieldEnabled, starfieldCount, starfieldSpeed, accentColor } = useTheme();
   const { enabledServices } = useServices();
 
   const currentTheme = themes[theme];
@@ -209,7 +209,11 @@ const App: React.FC = () => {
       style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
     >
       <Snowflakes enabled={snowflakesEnabled} />
-      <Starfield enabled={starfieldEnabled} />
+      <Starfield
+        enabled={starfieldEnabled}
+        particleCount={starfieldCount}
+        animationSpeed={starfieldSpeed}
+      />
 
       <aside
         className="group fixed left-0 top-0 h-full z-[60] w-20 hover:w-64 transition-all duration-300 ease-in-out border-r flex flex-col items-center py-6 shadow-2xl overflow-hidden"

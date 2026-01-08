@@ -1,25 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface StarfieldProps {
   enabled: boolean;
   density?: number; // количество звезд (20-100)
   speed?: number; // скорость движения (1-5)
+  particleCount?: number; // количество звезд
+  animationSpeed?: number; // скорость анимации
 }
 
 const Starfield: React.FC<StarfieldProps> = ({
   enabled,
   density = 50,
-  speed = 2
+  speed = 2,
+  particleCount = 50,
+  animationSpeed = 2
 }) => {
   if (!enabled) return null;
 
   // Генерируем звезды с разными характеристиками
-  const stars = Array.from({ length: density }, (_, i) => ({
+  const stars = Array.from({ length: particleCount }, (_, i) => ({
     id: i,
     size: Math.random() * 3 + 1, // размер от 1px до 4px
     left: Math.random() * 100, // позиция от 0% до 100%
     top: Math.random() * 100, // позиция от 0% до 100%
-    duration: Math.random() * 50 + 50, // длительность анимации от 50s до 100s
+    duration: (Math.random() * 50 + 50) / animationSpeed, // длительность анимации от 50s до 100s, зависит от скорости
     delay: Math.random() * 100, // задержка старта от 0s до 100s
     brightness: Math.random() * 0.8 + 0.2, // яркость от 0.2 до 1.0
     twinkleSpeed: Math.random() * 3 + 2, // скорость мерцания от 2s до 5s
