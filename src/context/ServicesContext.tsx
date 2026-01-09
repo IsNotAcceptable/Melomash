@@ -7,7 +7,6 @@ export const ALL_SERVICE_IDS = [
   "vk",
   "soundcloud",
   "applemusic",
-  "local",
 ];
 
 interface ServicesContextType {

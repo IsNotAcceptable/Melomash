@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Settings, HardDrive, ChevronRight, Sparkle, ArrowRight, ArrowLeft, RotateCw } from "lucide-react";
+import { Settings, ChevronRight, Sparkle, ArrowRight, ArrowLeft, RotateCw } from "lucide-react";
 import { useTheme, themes, getAccentColorValue } from "./context/ThemeContext";
 import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
 import Snowflakes from "./components/Snowflakes";
 import Starfield from "./components/Starfield";
-import LocalPlayer from "./components/LocalPlayer";
 import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siApplemusic } from "simple-icons";
 
 //@ts-ignore
@@ -17,7 +16,7 @@ type Service = {
   url?: string;
   icon: any;
   iconType: "simple" | "lucide";
-  type: "web" | "local";
+  type: "web";
 };
 
 const SimpleIcon = ({
@@ -94,13 +93,6 @@ const ALL_SERVICES_DATA: Service[] = [
     icon: siApplemusic,
     iconType: "simple",
     type: "web",
-  },
-  {
-    id: "local",
-    name: "Локальные файлы",
-    icon: HardDrive,
-    iconType: "lucide",
-    type: "local",
   },
 ];
 
@@ -392,10 +384,7 @@ const App: React.FC = () => {
                 : "opacity-0 z-0 pointer-events-none"
             }`}
           >
-            {enabledServices.includes(s.id) &&
-              (s.type === "local" ? (
-                <LocalPlayer />
-              ) : (
+            {enabledServices.includes(s.id) && (
                 <webview
                   ref={(el) => {
                     if (el) webviewRefs.current[s.id] = el;
@@ -407,7 +396,7 @@ const App: React.FC = () => {
                   // @ts-ignore
                   webpreferences="autoplayPolicy=no-user-gesture-required, contextIsolation=false"
                 />
-              ))}
+              )}
           </div>
         ))}
         </div>

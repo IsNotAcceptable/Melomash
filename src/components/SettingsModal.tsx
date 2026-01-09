@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   Check,
   Pipette,
-  HardDrive,
   Sparkle,
 } from "lucide-react";
 import { siVk, siSpotify, siYoutubemusic, siSoundcloud, siApplemusic } from "simple-icons";
@@ -117,7 +116,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     vk: "VK Музыка",
     soundcloud: "SoundCloud",
     applemusic: "Apple Music",
-    local: "Локальные файлы",
   };
 
   const serviceIcons: Record<string, { icon: any; iconType: "simple" | "lucide" }> = {
@@ -127,7 +125,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     vk: { icon: siVk, iconType: "simple" },
     soundcloud: { icon: siSoundcloud, iconType: "simple" },
     applemusic: { icon: siApplemusic, iconType: "simple" },
-    local: { icon: HardDrive, iconType: "lucide" },
   };
 
   return (
@@ -415,8 +412,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         <h3 className="font-bold text-sm">{serviceLabels[id]}</h3>
                       </div>
                       <p className="text-xs opacity-50">
-                        {id === "local" ? "Музыка с вашего устройства" :
-                         id === "youtube" ? "Онлайн музыкальная платформа" :
+                        {id === "youtube" ? "Онлайн музыкальная платформа" :
                          id === "spotify" ? "Популярный стриминговый сервис" :
                          id === "yandex" ? "Российская музыкальная платформа" :
                          id === "vk" ? "Социальная сеть с музыкой" :
@@ -457,7 +453,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           style={{ borderColor: currentTheme.border }}
         >
           <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-medium">
-            Melomash Hub v0.3
+            Melomash Hub v0.4
           </p>
         </div>
 
