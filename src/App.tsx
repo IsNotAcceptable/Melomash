@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Settings, HardDrive, ChevronRight, Sparkle } from "lucide-react";
+import { Settings, HardDrive, ChevronRight, Sparkle, ArrowRight, ArrowLeft, RotateCw } from "lucide-react";
 import { useTheme, themes, getAccentColorValue } from "./context/ThemeContext";
 import { useServices } from "./context/ServicesContext";
 import SettingsModal from "./components/SettingsModal";
@@ -121,11 +121,13 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const webviewRefs = useRef<Record<string, any>>({});
 
+
   useEffect(() => {
     if (!enabledServices.includes(activeId) && visibleServices.length > 0) {
       setActiveId(visibleServices[0].id);
     }
   }, [enabledServices, activeId, visibleServices]);
+
 
   // Обработка загрузки webview и инъекция CSS
   useEffect(() => {
@@ -151,6 +153,7 @@ const App: React.FC = () => {
         }
       };
 
+
       // Специфические правила для разных сервисов
       if (serviceId === 'vk') {
         // Убираем навязчивое всплывающее окно VK Музыки
@@ -162,6 +165,7 @@ const App: React.FC = () => {
             pointer-events: none !important;
           }
         `);
+
       }
 
       if (serviceId === 'yandex') {
@@ -202,6 +206,8 @@ const App: React.FC = () => {
       }
     });
   }, [enabledServices]); // Зависимость от enabledServices чтобы обновлять при изменении
+
+
 
   return (
     <div
@@ -279,7 +285,8 @@ const App: React.FC = () => {
                 </div>
 
                 <span
-                  className={`text-sm font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1 ${isActive ? "text-white" : "opacity-80"}`}
+                  className={`text-sm font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1 ${isActive ? "" : "opacity-80"}`}
+                  style={isActive ? { color: currentTheme.text } : undefined}
                 >
                   {s.name}
                 </span>
@@ -311,10 +318,72 @@ const App: React.FC = () => {
       </aside>
 
       <main
-        className="flex-1 ml-20 h-full relative"
+        className="flex-1 ml-20 h-full relative flex flex-col"
         style={{ backgroundColor: currentTheme.main }}
       >
-        {ALL_SERVICES_DATA.map((s) => (
+        {ALL_SERVICES_DATA.find((s) => s.id === activeId)?.type === "web" && (
+          <div
+            className="nav-panel"
+            style={{
+              width: "100%",
+              background: "rgba(20,20,20,0.97)",
+              borderBottom: "1px solid #232",
+              padding: "5px 16px",
+              position: "relative",
+              zIndex: 100
+            }}
+          >
+            <div className="nav-panel-buttons" style={{
+              display: "flex",
+              gap: "8px",
+              alignItems: "center",
+              transition: "opacity 0.3s ease-in-out"
+            }}>
+              <button
+                onClick={() => {
+                  const wv = webviewRefs.current[activeId];
+                  if (wv && wv.canGoBack && wv.canGoBack()) wv.goBack();
+                }}
+                title="Назад"
+                style={{
+                  width: 28, height: 28, borderRadius: 6, background: "#232323", border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: 0.75
+                }}
+              >
+                <ArrowLeft size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  const wv = webviewRefs.current[activeId];
+                  if (wv && wv.canGoForward && wv.canGoForward()) wv.goForward();
+                }}
+                title="Вперед"
+                style={{
+                  width: 28, height: 28, borderRadius: 6, background: "#232323", border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: 0.75
+                }}
+              >
+                <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  const wv = webviewRefs.current[activeId];
+                  if (wv) wv.reload();
+                }}
+                title="Обновить"
+                style={{
+                  width: 28, height: 28, borderRadius: 6, background: "#232323", border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: 0.75
+                }}
+              >
+                <RotateCw size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div style={{ flex: 1, position: "relative" }}>
+          {ALL_SERVICES_DATA.map((s) => (
           <div
             key={s.id}
             className={`absolute inset-0 transition-opacity duration-500 ${
@@ -341,6 +410,7 @@ const App: React.FC = () => {
               ))}
           </div>
         ))}
+        </div>
       </main>
 
       <SettingsModal
@@ -358,6 +428,9 @@ const App: React.FC = () => {
         webview:focus { outline: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        aside:hover ~ main .nav-panel {
+          display: none;
+        }
       `}</style>
     </div>
   );

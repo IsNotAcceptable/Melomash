@@ -39,7 +39,7 @@ const themes = {
     bg: '#FFFFFF',
     sidebar: '#F8F9FA',
     main: '#FFFFFF',
-    text: '#1F2937',
+    text: '#000000',
     textSecondary: '#6B7280',
     border: 'rgba(0, 0, 0, 0.1)',
     hover: 'rgba(0, 0, 0, 0.05)',
